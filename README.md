@@ -2,6 +2,8 @@
 
 An AI-powered career assistant that helps users improve their career journey through resume building, interview preparation, cover letter generation, and job application management.
 
+
+
 ## Overview
 
 AI Career Companion is a frontend-focused application designed to help job seekers manage and improve their career preparation using AI-powered tools.
@@ -43,3 +45,9 @@ Build for production:
 ```bash
 npm run build
 ```
+
+## Project Status
+
+🚧 Currently in active development as part of the FlyRank AI Frontend Engineering Internship.
+
+The goal is to build a production-ready AI Career Companion using React, Vite, Tailwind CSS, and AI-assisted development workflows.
