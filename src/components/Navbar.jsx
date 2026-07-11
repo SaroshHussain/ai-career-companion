@@ -1,48 +1,76 @@
 import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 
 const navLinks = [
-  { label: 'Features', href: '#features' },
-  { label: 'Resume', href: '#resume' },
-  { label: 'Interview', href: '#interview' },
-  { label: 'Tracker', href: '#tracker' },
+  { label: 'Features', href: '/#features' },
+  { label: 'Resume', href: '/#resume' },
+  { label: 'Interview', href: '/#interview' },
+  { label: 'Tracker', href: '/#tracker' },
+  { label: 'Settings', href: '/settings' },
 ]
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const location = useLocation()
 
   const toggleMenu = () => setIsMenuOpen((prev) => !prev)
   const closeMenu = () => setIsMenuOpen(false)
 
+  const getLinkClassName = (href) => {
+    const isActive =
+      href === '/settings'
+        ? location.pathname === '/settings'
+        : location.pathname === '/' && href.startsWith('/#')
+
+    return isActive
+      ? 'text-sm font-medium text-indigo-600'
+      : 'text-sm font-medium text-slate-600 transition-colors hover:text-indigo-600'
+  }
+
+  const getMobileLinkClassName = (href) => {
+    const isActive =
+      href === '/settings'
+        ? location.pathname === '/settings'
+        : location.pathname === '/' && href.startsWith('/#')
+
+    return isActive
+      ? 'block rounded-lg px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50'
+      : 'block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600'
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <a
-          href="#"
+        <Link
+          to="/"
           className="text-lg font-bold tracking-tight text-indigo-600 sm:text-xl"
         >
           AI Career Companion
-        </a>
+        </Link>
 
         <ul className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <li key={link.label}>
-              <a
-                href={link.href}
-                className="text-sm font-medium text-slate-600 transition-colors hover:text-indigo-600"
-              >
-                {link.label}
-              </a>
+              {link.href.startsWith('/#') ? (
+                <a href={link.href} className={getLinkClassName(link.href)}>
+                  {link.label}
+                </a>
+              ) : (
+                <Link to={link.href} className={getLinkClassName(link.href)}>
+                  {link.label}
+                </Link>
+              )}
             </li>
           ))}
         </ul>
 
         <div className="hidden md:block">
-          <a
-            href="#get-started"
+          <Link
+            to="/settings"
             className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
           >
-            Get Started
-          </a>
+            Set Preferences
+          </Link>
         </div>
 
         <button
@@ -82,23 +110,33 @@ function Navbar() {
           <ul className="flex flex-col gap-2 pt-2">
             {navLinks.map((link) => (
               <li key={link.label}>
-                <a
-                  href={link.href}
-                  className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-indigo-600"
-                  onClick={closeMenu}
-                >
-                  {link.label}
-                </a>
+                {link.href.startsWith('/#') ? (
+                  <a
+                    href={link.href}
+                    className={getMobileLinkClassName(link.href)}
+                    onClick={closeMenu}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    to={link.href}
+                    className={getMobileLinkClassName(link.href)}
+                    onClick={closeMenu}
+                  >
+                    {link.label}
+                  </Link>
+                )}
               </li>
             ))}
             <li className="pt-2">
-              <a
-                href="#get-started"
+              <Link
+                to="/settings"
                 className="block rounded-lg bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-700"
                 onClick={closeMenu}
               >
-                Get Started
-              </a>
+                Set Preferences
+              </Link>
             </li>
           </ul>
         </div>
