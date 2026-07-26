@@ -3,7 +3,22 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply min-h-screen font-sans antialiased;
+    background-color: theme('colors.background');
+    color: theme('colors.on-background');
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+
+  ::selection {
+    background-color: theme('colors.primary');
+    color: theme('colors.on-primary');
   }
 }
