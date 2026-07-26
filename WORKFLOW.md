@@ -204,6 +204,22 @@ The project should build successfully before committing changes.
 
 ---
 
+## AI Mistakes Encountered
+
+While generating the landing page, the AI made several mistakes that required manual review and correction:
+
+- Created duplicate components instead of reusing existing ones.
+- Ignored the project's folder structure in some places.
+- Used inconsistent spacing, typography, and styling compared to the design system.
+- Added unnecessary code that increased complexity.
+- Missed responsive adjustments for certain screen sizes.
+- Did not fully follow the existing color palette and UI conventions.
+- Generated some hardcoded content instead of extracting reusable data.
+- Included unused imports and redundant code.
+- Required manual cleanup to match the project's coding standards.
+
+These issues were much more common when using the vague prompt. The precise prompt, which inclugit ded project context, constraints, file references, and verification steps, produced cleaner, more maintainable code and significantly reduced the amount of manual review required.
+
 # Conclusion
 
 The comparison between vague and precise prompting clearly demonstrated that detailed prompts produce higher-quality implementations with fewer revisions. Clear instructions regarding architecture, reusable components, design conventions, responsiveness, accessibility, and verification significantly reduce review effort while improving correctness and maintainability.
