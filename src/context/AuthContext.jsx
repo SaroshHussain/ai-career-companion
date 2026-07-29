@@ -8,26 +8,41 @@ const USER_NAME = 'Sarosh Hussain'
 
 export const AuthContext = createContext(null)
 
-function loadAuth() {
+function readStoredAuth() {
+  if (typeof window === 'undefined') return null
+
   try {
-    const raw = localStorage.getItem(AUTH_KEY)
+    const raw = window.localStorage.getItem(AUTH_KEY)
     if (raw) {
       const data = JSON.parse(raw)
       if (data && data.isAuthenticated) return data
     }
-  } catch {}
+  } catch (error) {
+    console.warn('Unable to read auth storage.', error)
+  }
+
   return null
 }
 
+function persistAuth(userData) {
+  if (typeof window === 'undefined') return
+
+  try {
+    if (userData) {
+      window.localStorage.setItem(AUTH_KEY, JSON.stringify(userData))
+    } else {
+      window.localStorage.removeItem(AUTH_KEY)
+    }
+  } catch (error) {
+    console.warn('Unable to persist auth state.', error)
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(loadAuth)
+  const [user, setUser] = useState(readStoredAuth)
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(AUTH_KEY, JSON.stringify(user))
-    } else {
-      localStorage.removeItem(AUTH_KEY)
-    }
+    persistAuth(user)
   }, [user])
 
   const login = useCallback((email, password) => {
@@ -40,12 +55,13 @@ export function AuthProvider({ children }) {
       name: USER_NAME,
     }
     setUser(userData)
+    persistAuth(userData)
     return { success: true }
   }, [])
 
   const logout = useCallback(() => {
     setUser(null)
-    localStorage.removeItem(AUTH_KEY)
+    persistAuth(null)
   }, [])
 
   const value = { user, isAuthenticated: !!user, login, logout }
