@@ -1,5 +1,6 @@
-import { MdPublic, MdSend } from 'react-icons/md'
+import { MdPublic } from 'react-icons/md'
 import { HiAtSymbol, HiShare } from 'react-icons/hi2'
+import { Package, Building2, Mail, ChevronRight, Send } from 'lucide-react'
 
 import { footerLinks } from '../../data/footerLinks'
 import Button from '../ui/Button'
@@ -36,11 +37,15 @@ function Footer() {
         </div>
 
         <div>
-          <h2 className="mb-lg text-label-md font-bold text-on-surface">Product</h2>
+          <h2 className="mb-lg flex items-center gap-2 text-label-md font-bold text-on-surface">
+            <Package className="h-4 w-4 text-primary" aria-hidden />
+            Product
+          </h2>
           <ul className="space-y-sm text-body-sm text-on-surface-variant">
             {footerLinks.product.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className="transition hover:text-primary focus-visible:text-primary">
+                <a href={link.href} className="inline-flex items-center gap-1.5 transition hover:text-primary focus-visible:text-primary">
+                  <ChevronRight className="h-3 w-3 text-primary/60" aria-hidden />
                   {link.label}
                 </a>
               </li>
@@ -49,11 +54,15 @@ function Footer() {
         </div>
 
         <div>
-          <h2 className="mb-lg text-label-md font-bold text-on-surface">Company</h2>
+          <h2 className="mb-lg flex items-center gap-2 text-label-md font-bold text-on-surface">
+            <Building2 className="h-4 w-4 text-primary" aria-hidden />
+            Company
+          </h2>
           <ul className="space-y-sm text-body-sm text-on-surface-variant">
             {footerLinks.company.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className="transition hover:text-primary focus-visible:text-primary">
+                <a href={link.href} className="inline-flex items-center gap-1.5 transition hover:text-primary focus-visible:text-primary">
+                  <ChevronRight className="h-3 w-3 text-primary/60" aria-hidden />
                   {link.label}
                 </a>
               </li>
@@ -62,7 +71,10 @@ function Footer() {
         </div>
 
         <div>
-          <h2 className="mb-lg text-label-md font-bold text-on-surface">Subscribe</h2>
+          <h2 className="mb-lg flex items-center gap-2 text-label-md font-bold text-on-surface">
+            <Mail className="h-4 w-4 text-primary" aria-hidden />
+            Subscribe
+          </h2>
           <p className="mb-md text-body-sm text-on-surface-variant">Get career tips delivered to your inbox.</p>
           <form className="flex gap-2" aria-label="Newsletter signup">
             <label className="sr-only" htmlFor="newsletter-email">
@@ -75,7 +87,7 @@ function Footer() {
               className="h-11 w-full rounded border border-outline-variant bg-white px-3 py-2 text-body-sm text-on-surface outline-none transition focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
             />
             <Button type="submit" className="h-11 w-11 rounded px-0" aria-label="Submit newsletter signup">
-              <MdSend aria-hidden />
+              <Send className="h-4 w-4" aria-hidden />
             </Button>
           </form>
         </div>

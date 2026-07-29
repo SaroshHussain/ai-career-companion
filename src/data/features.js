@@ -23,10 +23,10 @@ export const features = [
     span: 'md:col-span-5',
   },
   {
-    title: 'Skill Gap Analysis',
+    title: 'Cover Letter',
     description:
-      'Identify exactly what\'s missing from your portfolio to reach the next seniority level. Personalized learning paths included.',
-    icon: 'analytics',
+      'Generate tailored cover letters that highlight your strengths and match job descriptions perfectly.',
+    icon: 'article',
     variant: 'skills',
     span: 'md:col-span-7',
   },

@@ -1,0 +1,248 @@
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { HiOutlineDocumentPlus, HiOutlineArrowPath, HiCheckCircle, HiOutlineCloudArrowUp, HiOutlineSparkles, HiOutlineCog6Tooth } from 'react-icons/hi2'
+import { MdDescription } from 'react-icons/md'
+
+import DashboardLayout from '../components/dashboard/DashboardLayout'
+import ResumeOptionCard from '../components/resume/ResumeOptionCard'
+import AIConfigModal from '../components/resume/AIConfigModal'
+import { useResume } from '../context/ResumeContext'
+import { parseResume } from '../services/resumeParser'
+import { getAIConfig, PROVIDERS } from '../services/aiResumeParser'
+
+function UploadZone({ onFileSelected, disabled }) {
+  const [isDragging, setIsDragging] = useState(false)
+  const inputRef = useRef(null)
+
+  const handleFile = (file) => {
+    if (onFileSelected) onFileSelected(file)
+  }
+
+  const handleDrop = (event) => {
+    event.preventDefault()
+    setIsDragging(false)
+    const file = event.dataTransfer.files[0]
+    if (file) handleFile(file)
+  }
+
+  const handleDragOver = (event) => {
+    event.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = () => setIsDragging(false)
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div
+        onDrop={disabled ? undefined : handleDrop}
+        onDragOver={disabled ? undefined : handleDragOver}
+        onDragLeave={disabled ? undefined : handleDragLeave}
+        onClick={() => {
+          if (!disabled) inputRef.current?.click()
+        }}
+        className={`flex w-full cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
+          disabled ? 'cursor-not-allowed opacity-60' : ''
+        } ${
+          isDragging
+            ? 'border-primary bg-primary/5'
+            : 'border-outline-variant/50 hover:border-primary/50 hover:bg-surface-container-low'
+        }`}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-label="Upload resume file"
+        onKeyDown={(event) => {
+          if (!disabled && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault()
+            inputRef.current?.click()
+          }
+        }}
+      >
+        <HiOutlineCloudArrowUp className="text-4xl text-primary" aria-hidden />
+        <div>
+          <p className="text-body-sm font-medium text-on-surface">Upload Resume</p>
+          <p className="mt-1 text-label-sm text-on-surface-variant">
+            Drag & drop or click to browse
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {['PDF', 'DOC', 'DOCX'].map((format) => (
+            <span
+              key={format}
+              className="rounded-md bg-surface-container-low px-2 py-0.5 text-label-sm text-on-surface-variant"
+            >
+              {format}
+            </span>
+          ))}
+        </div>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+        disabled={disabled}
+        onChange={(event) => {
+          const file = event.target.files[0]
+          if (file) handleFile(file)
+        }}
+      />
+      <div className="flex items-center gap-2 text-label-sm text-on-surface-variant">
+        <MdDescription className="text-base" aria-hidden />
+        Upload your existing resume and let Pathfinder AI improve it.
+      </div>
+    </div>
+  )
+}
+
+function SuccessState({ fileName, fileSize, onStartEditing }) {
+  const formatSize = (bytes) => {
+    if (!bytes) return ''
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / 1048576).toFixed(1)} MB`
+  }
+  const ext = fileName.split('.').pop().toUpperCase()
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex w-full flex-col items-center gap-3 rounded-xl border-2 border-green-200 bg-green-50 p-8 text-center">
+        <HiCheckCircle className="text-4xl text-green-600" aria-hidden />
+        <div>
+          <p className="text-body-sm font-medium text-green-800">Resume uploaded successfully</p>
+          <p className="mt-1 text-label-sm text-on-surface-variant">
+            {fileName} ({ext}{fileSize ? `, ${formatSize(fileSize)}` : ''})
+          </p>
+          <p className="mt-1 text-label-sm text-on-surface-variant">
+            Your resume has been parsed. Review and edit the extracted information.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onStartEditing}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-label-sm font-medium text-white transition hover:bg-primary/90"
+      >
+        Start Editing Resume
+      </button>
+    </div>
+  )
+}
+
+function ResumeBuilder() {
+  const navigate = useNavigate()
+  const { loadParsedResume, resetToNew } = useResume()
+  const [parsing, setParsing] = useState(false)
+  const [parseError, setParseError] = useState(null)
+  const [parsedFileInfo, setParsedFileInfo] = useState(null)
+  const [showConfig, setShowConfig] = useState(false)
+  const [aiConfig, setAiConfig] = useState(null)
+
+  useEffect(() => {
+    setAiConfig(getAIConfig())
+  }, [showConfig])
+
+  const handleCreate = () => {
+    resetToNew()
+    navigate('/dashboard/resume/edit', { state: { mode: 'new' } })
+  }
+
+  const handleFileSelected = async (file) => {
+    setParsing(true)
+    setParseError(null)
+    setParsedFileInfo(null)
+
+    try {
+      const parsed = await parseResume(file)
+
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const fileInfo = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          dataURL: event.target.result,
+        }
+        loadParsedResume(parsed, fileInfo)
+        setParsedFileInfo({ name: file.name, size: file.size })
+        setParsing(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (err) {
+      setParseError(err.message || 'Failed to parse resume. Please try again.')
+      setParsing(false)
+    }
+  }
+
+  const handleStartEditing = () => {
+    navigate('/dashboard/resume/edit', { state: { mode: 'upload' } })
+  }
+
+  const providerLabel = aiConfig && aiConfig.provider !== 'local'
+    ? Object.values(PROVIDERS).find((p) => p.id === aiConfig.provider)?.label || 'AI'
+    : null
+
+  return (
+    <DashboardLayout>
+      <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-headline-lg text-on-surface">Resume Builder</h1>
+            <p className="mt-1 text-body-md text-on-surface-variant">
+              Create a new resume from scratch or upload an existing one to edit it.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowConfig(true)}
+            className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-label-sm transition ${
+              providerLabel
+                ? 'border-primary/30 bg-primary/5 text-primary'
+                : 'border-outline-variant/50 text-on-surface-variant hover:border-outline-variant hover:text-on-surface'
+            }`}
+          >
+            <HiOutlineSparkles className="text-base" />
+            {providerLabel || 'AI Parser'}
+            <HiOutlineCog6Tooth className="text-sm" />
+          </button>
+        </div>
+
+        {parsing && (
+          <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+            <HiOutlineArrowPath className="animate-spin text-lg text-primary" aria-hidden />
+            <p className="text-body-sm text-primary">Parsing your resume...</p>
+          </div>
+        )}
+
+        {parseError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-body-sm text-red-700">
+            {parseError}
+          </div>
+        )}
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <ResumeOptionCard
+            icon={HiOutlineDocumentPlus}
+            title="Create New Resume"
+            description="Start from scratch with our guided resume builder. Fill in your details step by step."
+            onClick={handleCreate}
+          />
+
+          {parsedFileInfo ? (
+            <SuccessState
+              fileName={parsedFileInfo.name}
+              fileSize={parsedFileInfo.size}
+              onStartEditing={handleStartEditing}
+            />
+          ) : (
+            <UploadZone onFileSelected={handleFileSelected} disabled={parsing} />
+          )}
+        </div>
+      </div>
+
+      <AIConfigModal isOpen={showConfig} onClose={() => setShowConfig(false)} />
+    </DashboardLayout>
+  )
+}
+
+export default ResumeBuilder

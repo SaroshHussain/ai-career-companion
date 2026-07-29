@@ -9,7 +9,7 @@ function LandingPage() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-on-surface">
       <Navbar />
-      <main>
+      <main className="pt-[72px] md:pt-[80px]">
         <Hero />
         <FeatureBento />
         <HowItWorks />

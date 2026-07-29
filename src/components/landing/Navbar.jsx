@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { HiOutlineMenuAlt3, HiX } from 'react-icons/hi'
-
 import Button from '../ui/Button'
 
 const navLinks = [
@@ -32,7 +32,7 @@ function Navbar() {
         </div>
 
         <div className="hidden items-center gap-md md:flex">
-          <Button variant="ghost" className="px-lg py-2">
+          <Button as={Link} to="/login" variant="ghost" className="px-lg py-2">
             Sign In
           </Button>
           <Button as="a" href="#features" className="rounded px-lg py-2">
@@ -66,7 +66,7 @@ function Navbar() {
               </a>
             ))}
             <div className="mt-2 flex gap-2">
-              <Button variant="secondary" className="flex-1 py-3 text-center" onClick={() => setIsMenuOpen(false)}>
+              <Button as={Link} to="/login" variant="secondary" className="flex-1 py-3 text-center" onClick={() => setIsMenuOpen(false)}>
                 Sign In
               </Button>
               <Button as="a" href="#features" className="flex-1 py-3 text-center" onClick={() => setIsMenuOpen(false)}>

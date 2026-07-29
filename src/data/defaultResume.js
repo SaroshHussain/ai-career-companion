@@ -1,0 +1,117 @@
+export const defaultResume = {
+  personal: {
+    fullName: '',
+    professionalTitle: '',
+    email: '',
+    phone: '',
+    location: '',
+    portfolio: '',
+    linkedin: '',
+    github: '',
+    professionalSummary: '',
+  },
+  education: [],
+  experience: [],
+  projects: [],
+  skills: {
+    technical: [],
+    soft: [],
+    languages: [],
+    certifications: [],
+  },
+}
+
+export const placeholderResume = {
+  personal: {
+    fullName: 'Alex Johnson',
+    professionalTitle: 'Senior Frontend Developer',
+    email: 'alex.johnson@email.com',
+    phone: '+1 (555) 123-4567',
+    location: 'San Francisco, CA',
+    portfolio: 'alexjohnson.dev',
+    linkedin: 'linkedin.com/in/alexjohnson',
+    github: 'github.com/alexjohnson',
+    professionalSummary:
+      'Results-driven Senior Frontend Developer with 6+ years of experience building high-performance web applications. Proficient in React, TypeScript, and modern CSS frameworks. Passionate about creating intuitive user interfaces and leading cross-functional teams to deliver exceptional digital experiences.',
+  },
+  education: [
+    {
+      id: 'edu-1',
+      institution: 'Stanford University',
+      degree: 'Bachelor of Science',
+      fieldOfStudy: 'Computer Science',
+      startDate: '2014-09',
+      endDate: '2018-06',
+      grade: '3.8 GPA',
+      description:
+        'Focused on software engineering and human-computer interaction. Dean\'s list for four consecutive years.',
+    },
+    {
+      id: 'edu-2',
+      institution: 'MIT',
+      degree: 'Master of Science',
+      fieldOfStudy: 'Computer Science',
+      startDate: '2018-09',
+      endDate: '2020-06',
+      grade: '4.0 GPA',
+      description:
+        'Specialized in machine learning and natural language processing. Published two research papers.',
+    },
+  ],
+  experience: [
+    {
+      id: 'exp-1',
+      jobTitle: 'Senior Frontend Developer',
+      company: 'TechCorp Inc.',
+      startDate: '2022-03',
+      endDate: '',
+      currentlyWorking: true,
+      description:
+        'Leading the frontend architecture for a SaaS platform serving 500K+ users. Driving migration from legacy codebase to modern React ecosystem.',
+      achievements:
+        'Reduced application bundle size by 40% through code splitting and lazy loading. Mentored 4 junior developers. Led the redesign of the core product interface improving user engagement by 25%.',
+    },
+    {
+      id: 'exp-2',
+      jobTitle: 'Frontend Developer',
+      company: 'DataFlow Inc.',
+      startDate: '2020-07',
+      endDate: '2022-02',
+      currentlyWorking: false,
+      description:
+        'Developed responsive dashboards and data visualization components for enterprise analytics platform.',
+      achievements:
+        'Built a real-time data dashboard using WebSockets and D3.js. Implemented comprehensive unit and integration tests achieving 95% code coverage.',
+    },
+  ],
+  projects: [
+    {
+      id: 'proj-1',
+      name: 'Open Source CLI Tool',
+      role: 'Creator & Maintainer',
+      startDate: '2023-01',
+      endDate: '',
+      description: 'A CLI tool for scaffolding React components with built-in best practices.',
+      technologies: ['Node.js', 'React', 'TypeScript'],
+      githubLink: 'github.com/alexjohnson/cli-tool',
+      liveLink: 'npmjs.com/package/cli-tool',
+    },
+    {
+      id: 'proj-2',
+      name: 'E-commerce Platform',
+      role: 'Full Stack Developer',
+      startDate: '2022-06',
+      endDate: '2023-02',
+      description: 'Built a full-featured e-commerce platform for local artisans.',
+      technologies: ['React', 'Node.js', 'Stripe', 'PostgreSQL'],
+      githubLink: 'github.com/alexjohnson/ecommerce',
+      liveLink: 'artisan-marketplace.demo',
+    },
+  ],
+  skills: {
+    technical: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS', 'Node.js', 'GraphQL', 'PostgreSQL', 'AWS'],
+    soft: ['Team Leadership', 'Technical Communication', 'Problem Solving', 'Agile Methodologies'],
+    languages: ['English (Native)', 'Spanish (Professional)', 'French (Intermediate)'],
+    certifications: ['AWS Certified Developer', 'Google Professional Cloud Developer'],
+  },
+}
