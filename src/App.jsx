@@ -7,20 +7,45 @@ import Dashboard from './pages/Dashboard'
 import ResumeBuilder from './pages/ResumeBuilder'
 import ResumeEditor from './pages/ResumeEditor'
 import { ResumeProvider } from './context/ResumeContext'
+import { AuthProvider } from './context/AuthContext'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
     <BrowserRouter>
-      <ResumeProvider>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/resume" element={<ResumeBuilder />} />
-          <Route path="/dashboard/resume/edit" element={<ResumeEditor />} />
-        </Routes>
-      </ResumeProvider>
+      <AuthProvider>
+        <ResumeProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/resume"
+              element={
+                <ProtectedRoute>
+                  <ResumeBuilder />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/resume/edit"
+              element={
+                <ProtectedRoute>
+                  <ResumeEditor />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </ResumeProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

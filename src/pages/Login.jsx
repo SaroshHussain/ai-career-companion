@@ -1,20 +1,53 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { HiEye, HiEyeSlash } from 'react-icons/hi2'
+import { HiEye, HiEyeSlash, HiOutlineArrowPath } from 'react-icons/hi2'
 import { FcGoogle } from 'react-icons/fc'
 import { FaLinkedinIn } from 'react-icons/fa6'
 import { MdArrowForward } from 'react-icons/md'
 
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
+import { useAuth } from '../hooks/useAuth'
 
 function Login() {
   const navigate = useNavigate()
+  const { login, isAuthenticated } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [touched, setTouched] = useState({ email: false, password: false })
 
-  const handleSubmit = (event) => {
+  useEffect(() => {
+    if (isAuthenticated) navigate('/dashboard', { replace: true })
+  }, [isAuthenticated, navigate])
+
+  const emailError = touched.email && !email.trim() ? 'Email is required.' : ''
+  const passwordError = touched.password && !password ? 'Password is required.' : ''
+  const fieldError = error &&
+    (error.includes('email') || error.includes('password') || error.includes('Invalid'))
+    && email.trim() && password
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    navigate('/dashboard')
+    setError('')
+    setTouched({ email: true, password: true })
+
+    if (!email.trim() || !password) return
+
+    setLoading(true)
+
+    await new Promise((r) => setTimeout(r, 600))
+
+    const result = login(email.trim(), password)
+    setLoading(false)
+
+    if (result.success) {
+      navigate('/dashboard', { replace: true })
+    } else {
+      setError(result.error)
+    }
   }
 
   return (
@@ -31,6 +64,12 @@ function Login() {
           </div>
 
           <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-xl shadow-card">
+            {error && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-body-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             <form className="flex flex-col gap-5" noValidate onSubmit={handleSubmit}>
               <Input
                 label="Email Address"
@@ -38,6 +77,11 @@ function Login() {
                 type="email"
                 placeholder="name@company.com"
                 autoComplete="email"
+                value={email}
+                error={emailError || (fieldError ? '' : '')}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+                className={error ? 'border-red-400 focus:border-red-500 focus:ring-red-500/30' : ''}
               />
 
               <div className="flex flex-col gap-1.5">
@@ -55,7 +99,14 @@ function Login() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Enter your password"
                     autoComplete="current-password"
-                    className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 pr-10 text-body-md text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                    className={`w-full rounded-lg border bg-surface-container-lowest px-3 py-2.5 pr-10 text-body-md text-on-surface outline-none transition focus:ring-1 ${
+                      error
+                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500/30'
+                        : 'border-outline-variant focus:border-primary focus:ring-primary'
+                    }`}
                   />
                   <button
                     type="button"
@@ -66,6 +117,9 @@ function Login() {
                     {showPassword ? <HiEyeSlash className="text-xl" /> : <HiEye className="text-xl" />}
                   </button>
                 </div>
+                {passwordError && (
+                  <p className="text-body-sm text-red-600">{passwordError}</p>
+                )}
               </div>
 
               <label className="flex cursor-pointer items-center gap-2.5 text-body-sm text-on-surface">
@@ -77,8 +131,8 @@ function Login() {
                 Remember me for 30 days
               </label>
 
-              <Button type="submit" className="w-full" iconRight={<MdArrowForward />}>
-                Sign In
+              <Button type="submit" className="w-full" disabled={loading} iconRight={loading ? <HiOutlineArrowPath className="animate-spin" /> : <MdArrowForward />}>
+                {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
 
@@ -91,14 +145,16 @@ function Login() {
             <div className="flex flex-col gap-3">
               <button
                 type="button"
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FcGoogle className="text-xl" />
                 Google
               </button>
               <button
                 type="button"
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FaLinkedinIn className="text-xl text-[#0A66C2]" />
                 LinkedIn

@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   HiOutlineChartBarSquare,
   HiOutlineDocumentText,
@@ -12,6 +12,7 @@ import {
   HiXMark,
 } from 'react-icons/hi2'
 import { MdDashboard } from 'react-icons/md'
+import { useAuth } from '../../hooks/useAuth'
 
 const navItems = [
   { label: 'Dashboard', icon: MdDashboard, href: '/dashboard' },
@@ -25,11 +26,17 @@ const navItems = [
 const bottomItems = [
   { label: 'User Profile', icon: HiOutlineUser, href: '/dashboard/profile' },
   { label: 'Settings', icon: HiOutlineCog6Tooth, href: '/dashboard/settings' },
-  { label: 'Sign Out', icon: HiOutlineArrowRightOnRectangle, href: '/login' },
 ]
 
 function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   const isActive = (href) => location.pathname === href
 
@@ -109,6 +116,22 @@ function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
                 </Link>
               </li>
             ))}
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  handleLogout()
+                }}
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm text-on-surface-variant transition-colors hover:bg-red-50 hover:text-red-600 ${
+                  isCollapsed ? 'justify-center px-2' : ''
+                }`}
+                title={isCollapsed ? 'Sign Out' : undefined}
+              >
+                <HiOutlineArrowRightOnRectangle className="text-xl shrink-0" aria-hidden />
+                {!isCollapsed && <span>Sign Out</span>}
+              </button>
+            </li>
           </ul>
         </div>
 
