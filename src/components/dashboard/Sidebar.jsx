@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   HiOutlineChartBarSquare,
@@ -13,6 +14,7 @@ import {
 } from 'react-icons/hi2'
 import { MdDashboard } from 'react-icons/md'
 import { useAuth } from '../../hooks/useAuth'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 const navItems = [
   { label: 'Dashboard', icon: MdDashboard, href: '/dashboard' },
@@ -32,8 +34,10 @@ function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false)
 
   const handleLogout = () => {
+    setShowSignOutDialog(false)
     logout()
     navigate('/login', { replace: true })
   }
@@ -119,10 +123,7 @@ function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
             <li>
               <button
                 type="button"
-                onClick={() => {
-                  onClose()
-                  handleLogout()
-                }}
+                onClick={() => setShowSignOutDialog(true)}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-body-sm text-on-surface-variant transition-colors hover:bg-red-50 hover:text-red-600 ${
                   isCollapsed ? 'justify-center px-2' : ''
                 }`}
@@ -152,6 +153,16 @@ function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }) {
           </svg>
         </button>
       </aside>
+
+      <ConfirmDialog
+        isOpen={showSignOutDialog}
+        onClose={() => setShowSignOutDialog(false)}
+        onConfirm={handleLogout}
+        title="Sign Out"
+        message="Are you sure you want to sign out? You will need to sign in again to access your dashboard."
+        confirmLabel="Sign Out"
+        confirmVariant="danger"
+      />
     </>
   )
 }

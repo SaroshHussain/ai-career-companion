@@ -3,14 +3,114 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --color-surface: #f8f9ff;
+    --color-surface-dim: #cbdbf5;
+    --color-surface-bright: #f8f9ff;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #eff4ff;
+    --color-surface-container: #e5eeff;
+    --color-surface-container-high: #dce9ff;
+    --color-surface-container-highest: #d3e4fe;
+    --color-background: #f8f9ff;
+    --color-on-background: #0b1c30;
+    --color-on-surface: #0b1c30;
+    --color-on-surface-variant: #434655;
+    --color-primary: #004ac6;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #2563eb;
+    --color-on-primary-container: #eeefff;
+    --color-secondary: #4648d4;
+    --color-secondary-container: #6063ee;
+    --color-tertiary: #006056;
+    --color-tertiary-container: #007b6e;
+    --color-outline: #737686;
+    --color-outline-variant: #c3c6d7;
+    --color-inverse-surface: #213145;
+    --color-inverse-on-surface: #eaf1ff;
+    --color-inverse-primary: #b4c5ff;
+    --color-error: #ba1a1a;
+    --color-error-container: #ffdad6;
+    --color-on-error: #ffffff;
+    --color-on-error-container: #93000a;
+    --color-primary-fixed: #dbe1ff;
+    --color-primary-fixed-dim: #b4c5ff;
+    --color-on-primary-fixed: #00174b;
+    --color-on-primary-fixed-variant: #003ea8;
+    --color-secondary-fixed: #e1e0ff;
+    --color-secondary-fixed-dim: #c0c1ff;
+    --color-on-secondary-fixed: #07006c;
+    --color-on-secondary-fixed-variant: #2f2ebe;
+    --color-tertiary-fixed: #71f8e4;
+    --color-tertiary-fixed-dim: #4fdbc8;
+    --color-on-tertiary-fixed: #00201c;
+    --color-on-tertiary-fixed-variant: #005048;
+    --color-on-secondary: #ffffff;
+    --color-on-secondary-container: #fffbff;
+    --color-on-tertiary: #ffffff;
+    --color-on-tertiary-container: #b1fff1;
+    --color-surface-variant: #d3e4fe;
+    --color-surface-tint: #0053db;
+  }
+
+  .dark {
+    --color-surface: #0f172a;
+    --color-surface-dim: #1a2332;
+    --color-surface-bright: #1e293b;
+    --color-surface-container-lowest: #1e293b;
+    --color-surface-container-low: #1f2a3e;
+    --color-surface-container: #263348;
+    --color-surface-container-high: #2d3b52;
+    --color-surface-container-highest: #35445c;
+    --color-background: #0f172a;
+    --color-on-background: #e2e8f0;
+    --color-on-surface: #f1f5f9;
+    --color-on-surface-variant: #94a3b8;
+    --color-primary: #60a5fa;
+    --color-on-primary: #0f172a;
+    --color-primary-container: #1d4ed8;
+    --color-on-primary-container: #dbeafe;
+    --color-secondary: #a5b4fc;
+    --color-secondary-container: #4338ca;
+    --color-tertiary: #2dd4bf;
+    --color-tertiary-container: #0f766e;
+    --color-outline: #64748b;
+    --color-outline-variant: #475569;
+    --color-inverse-surface: #e2e8f0;
+    --color-inverse-on-surface: #0f172a;
+    --color-inverse-primary: #2563eb;
+    --color-error: #fca5a5;
+    --color-error-container: #991b1b;
+    --color-on-error: #0f172a;
+    --color-on-error-container: #fecaca;
+    --color-primary-fixed: #dbeafe;
+    --color-primary-fixed-dim: #93c5fd;
+    --color-on-primary-fixed: #1e3a5f;
+    --color-on-primary-fixed-variant: #2563eb;
+    --color-secondary-fixed: #e0e7ff;
+    --color-secondary-fixed-dim: #a5b4fc;
+    --color-on-secondary-fixed: #312e81;
+    --color-on-secondary-fixed-variant: #4f46e5;
+    --color-tertiary-fixed: #ccfbf1;
+    --color-tertiary-fixed-dim: #5eead4;
+    --color-on-tertiary-fixed: #134e4a;
+    --color-on-tertiary-fixed-variant: #0f766e;
+    --color-on-secondary: #0f172a;
+    --color-on-secondary-container: #e0e7ff;
+    --color-on-tertiary: #0f172a;
+    --color-on-tertiary-container: #ccfbf1;
+    --color-surface-variant: #263348;
+    --color-surface-tint: #60a5fa;
+  }
+
   html {
     scroll-behavior: smooth;
   }
 
   body {
     @apply min-h-screen font-sans antialiased;
-    background-color: theme('colors.background');
-    color: theme('colors.on-background');
+    background-color: var(--color-background);
+    color: var(--color-on-background);
   }
 
   #root {
@@ -18,7 +118,7 @@
   }
 
   ::selection {
-    background-color: theme('colors.primary');
-    color: theme('colors.on-primary');
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
   }
 }

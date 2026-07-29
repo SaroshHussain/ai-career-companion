@@ -4,6 +4,7 @@ import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import SignUp from './pages/SignUp'
 import Dashboard from './pages/Dashboard'
+import Settings from './pages/Settings'
 import ResumeBuilder from './pages/ResumeBuilder'
 import ResumeEditor from './pages/ResumeEditor'
 import { ResumeProvider } from './context/ResumeContext'
@@ -24,6 +25,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
