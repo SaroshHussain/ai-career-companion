@@ -161,7 +161,7 @@ function BulletBlock({ text }) {
     <View style={styles.bulletBlock}>
       {items.map((line, i) => (
         <Text key={i} style={styles.bullet}>
-          {line.startsWith('-') || line.startsWith('•') ? line : `• ${line}`}
+          {line && (line.startsWith('-') || line.startsWith('•')) ? line : `• ${line || ''}`}
         </Text>
       ))}
     </View>
@@ -178,65 +178,62 @@ function HeaderBlock({ personal }) {
   if (personal.github) contactItems.push(personal.github)
 
   const hasContact = contactItems.length > 0
-  const hasName = personal.fullName || personal.professionalTitle
-
-  if (!hasName) return null
 
   return (
     <View>
-      {personal.fullName && (
+      {personal.fullName ? (
         <Text style={styles.name}>{personal.fullName}</Text>
-      )}
-      {personal.professionalTitle && (
+      ) : null}
+      {personal.professionalTitle ? (
         <Text style={styles.title}>{personal.professionalTitle}</Text>
-      )}
-      {hasContact && (
+      ) : null}
+      {hasContact ? (
         <View style={styles.contactRow}>
           {contactItems.map((item, i) => (
             <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {i > 0 && <Text style={styles.contactSep}>|</Text>}
-              <Text>{item}</Text>
+              {i > 0 ? <Text style={styles.contactSep}>|</Text> : null}
+              <Text>{item || ''}</Text>
             </View>
           ))}
         </View>
-      )}
-      {(hasName || hasContact) && <View style={styles.divider} />}
+      ) : null}
+      {(personal.fullName || personal.professionalTitle || hasContact) ? (
+        <View style={styles.divider} />
+      ) : null}
     </View>
   )
 }
 
 function SummaryBlock({ summary }) {
-  if (!summary) return null
   return (
     <View style={styles.section} wrap={false}>
       <Text style={styles.sectionTitle}>Professional Summary</Text>
-      <Text style={styles.summaryText}>{summary}</Text>
+      <Text style={styles.summaryText}>{summary || ''}</Text>
     </View>
   )
 }
 
 function ExperienceBlock({ experience }) {
-  if (!experience || experience.length === 0) return null
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Experience</Text>
-      {experience.map((exp) => (
+      {(experience || []).map((exp) => (
         <View key={exp.id} style={styles.entry} wrap={false}>
           <View style={styles.entryHeader}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.entryTitle}>{exp.jobTitle}</Text>
-              {exp.company && <Text style={styles.entrySubtitle}>{exp.company}</Text>}
+              <Text style={styles.entryTitle}>{exp.jobTitle || ''}</Text>
+              {exp.company ? <Text style={styles.entrySubtitle}>{exp.company || ''}</Text> : null}
             </View>
-            {(exp.startDate || exp.endDate || exp.currentlyWorking) && (
+            {(exp.startDate || exp.endDate || exp.currentlyWorking) ? (
               <Text style={styles.entryDate}>
                 {exp.startDate ? formatDate(exp.startDate) : ''}
                 {(exp.startDate || exp.endDate) ? ' – ' : ''}
                 {exp.currentlyWorking ? 'Present' : exp.endDate ? formatDate(exp.endDate) : ''}
               </Text>
-            )}
+            ) : null}
           </View>
-          {exp.description && <BulletBlock text={exp.description} />}
-          {exp.achievements && <BulletBlock text={exp.achievements} />}
+          {exp.description ? <BulletBlock text={exp.description} /> : null}
+          {exp.achievements ? <BulletBlock text={exp.achievements} /> : null}
         </View>
       ))}
     </View>
@@ -244,33 +241,32 @@ function ExperienceBlock({ experience }) {
 }
 
 function ProjectsBlock({ projects }) {
-  if (!projects || projects.length === 0) return null
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Projects</Text>
-      {projects.map((proj) => (
+      {(projects || []).map((proj) => (
         <View key={proj.id} style={styles.entry} wrap={false}>
           <View style={styles.entryHeader}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.entryTitle}>{proj.name}</Text>
-              {proj.role && <Text style={styles.entrySubtitle}>{proj.role}</Text>}
+              <Text style={styles.entryTitle}>{proj.name || ''}</Text>
+              {proj.role ? <Text style={styles.entrySubtitle}>{proj.role || ''}</Text> : null}
             </View>
-            {(proj.startDate || proj.endDate) && (
+            {(proj.startDate || proj.endDate) ? (
               <Text style={styles.entryDate}>
                 {proj.startDate ? formatDate(proj.startDate) : ''}
                 {(proj.startDate || proj.endDate) ? ' – ' : ''}
                 {proj.endDate ? formatDate(proj.endDate) : 'Present'}
               </Text>
-            )}
+            ) : null}
           </View>
-          {proj.description && <BulletBlock text={proj.description} />}
-          {proj.technologies && proj.technologies.length > 0 && (
+          {proj.description ? <BulletBlock text={proj.description} /> : null}
+          {(proj.technologies && proj.technologies.length > 0) ? (
             <View style={[styles.skillRow, { marginTop: 3 }]}>
               {proj.technologies.map((tech, i) => (
-                <Text key={i} style={styles.chip}>{tech}</Text>
+                <Text key={i} style={styles.chip}>{tech || ''}</Text>
               ))}
             </View>
-          )}
+          ) : null}
         </View>
       ))}
     </View>
@@ -278,29 +274,28 @@ function ProjectsBlock({ projects }) {
 }
 
 function EducationBlock({ education }) {
-  if (!education || education.length === 0) return null
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Education</Text>
-      {education.map((edu) => (
+      {(education || []).map((edu) => (
         <View key={edu.id} style={styles.entry} wrap={false}>
           <View style={styles.entryHeader}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.entryTitle}>{edu.institution}</Text>
+              <Text style={styles.entryTitle}>{edu.institution || ''}</Text>
               <Text style={[styles.entrySubtitle, { color: C.secondary }]}>
-                {edu.degree}{edu.fieldOfStudy ? ` in ${edu.fieldOfStudy}` : ''}
+                {edu.degree || ''}{edu.fieldOfStudy ? ` in ${edu.fieldOfStudy || ''}` : ''}
               </Text>
             </View>
-            {(edu.startDate || edu.endDate) && (
+            {(edu.startDate || edu.endDate) ? (
               <Text style={styles.entryDate}>
                 {edu.startDate ? formatDate(edu.startDate) : ''} – {edu.endDate ? formatDate(edu.endDate) : ''}
               </Text>
-            )}
+            ) : null}
           </View>
-          {edu.description && <BulletBlock text={edu.description} />}
-          {edu.grade && (
-            <Text style={[styles.bullet, { paddingLeft: 0, marginTop: 1 }]}>Grade: {edu.grade}</Text>
-          )}
+          {edu.description ? <BulletBlock text={edu.description} /> : null}
+          {edu.grade ? (
+            <Text style={[styles.bullet, { paddingLeft: 0, marginTop: 1 }]}>Grade: {edu.grade || ''}</Text>
+          ) : null}
         </View>
       ))}
     </View>
@@ -308,39 +303,40 @@ function EducationBlock({ education }) {
 }
 
 function SkillsBlock({ skills }) {
-  const hasTech = skills.technical && skills.technical.length > 0
-  const hasLangs = skills.languages && skills.languages.length > 0
-  const hasCerts = skills.certifications && skills.certifications.length > 0
+  const s = skills || {}
+  const technical = s.technical || []
+  const languages = s.languages || []
+  const certs = s.certifications || []
 
-  if (!hasTech && !hasLangs && !hasCerts) return null
+  if (technical.length === 0 && languages.length === 0 && certs.length === 0) return null
 
   return (
     <View style={styles.section}>
-      {hasTech && (
+      {technical.length > 0 && (
         <View style={{ marginBottom: 6 }}>
           <Text style={styles.sectionTitle}>Technical Skills</Text>
           <View style={styles.skillRow}>
-            {skills.technical.map((skill, i) => (
+            {technical.map((skill, i) => (
               <Text key={i} style={styles.chip}>{skill}</Text>
             ))}
           </View>
         </View>
       )}
-      {hasLangs && (
+      {languages.length > 0 && (
         <View style={{ marginBottom: 6 }}>
           <Text style={styles.sectionTitle}>Languages</Text>
           <View style={styles.skillRow}>
-            {skills.languages.map((lang, i) => (
+            {languages.map((lang, i) => (
               <Text key={i} style={styles.chip}>{lang}</Text>
             ))}
           </View>
         </View>
       )}
-      {hasCerts && (
+      {certs.length > 0 && (
         <View>
           <Text style={styles.sectionTitle}>Certifications</Text>
           <View style={styles.skillRow}>
-            {skills.certifications.map((cert, i) => (
+            {certs.map((cert, i) => (
               <Text key={i} style={styles.chip}>{cert}</Text>
             ))}
           </View>
@@ -351,23 +347,22 @@ function SkillsBlock({ skills }) {
 }
 
 function CertificationsBlock({ certifications }) {
-  if (!certifications || certifications.length === 0) return null
   return (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>Certifications</Text>
-      {certifications.map((cert) => (
+      {(certifications || []).map((cert) => (
         <View key={cert.id} style={styles.entry} wrap={false}>
-          <Text style={styles.entryTitle}>{cert.name}</Text>
-          {(cert.issuer || cert.date) && (
+          <Text style={styles.entryTitle}>{cert.name || ''}</Text>
+          {(cert.issuer || cert.date) ? (
             <Text style={[styles.entryDate, { marginTop: 1 }]}>
-              {cert.issuer}{cert.issuer && cert.date ? ' — ' : ''}{cert.date ? formatDate(cert.date) : ''}
+              {cert.issuer || ''}{cert.issuer && cert.date ? ' — ' : ''}{cert.date ? formatDate(cert.date) : ''}
             </Text>
-          )}
-          {cert.url && (
-            <Link src={cert.url} style={[styles.linkText, { marginTop: 1 }]}>
-              {cert.url}
+          ) : null}
+          {cert.url ? (
+            <Link src={cert.url || ''} style={[styles.linkText, { marginTop: 1 }]}>
+              {cert.url || ''}
             </Link>
-          )}
+          ) : null}
         </View>
       ))}
     </View>
@@ -375,39 +370,46 @@ function CertificationsBlock({ certifications }) {
 }
 
 export function ResumePDFDocument({ data }) {
-  const { personal, education, experience, projects, skills, certifications } = data
+  const safe = data || {}
+  const personal = safe.personal || {}
+  const education = safe.education || []
+  const experience = safe.experience || []
+  const projects = safe.projects || []
+  const skills = safe.skills || {}
+  const certifications = safe.certifications || []
 
-  const hasAnyContent =
-    personal.fullName ||
-    personal.professionalTitle ||
-    personal.professionalSummary ||
-    (experience && experience.length > 0) ||
-    (education && education.length > 0) ||
-    (projects && projects.length > 0) ||
-    (skills.technical && skills.technical.length > 0) ||
-    (skills.soft && skills.soft.length > 0) ||
-    (skills.languages && skills.languages.length > 0) ||
-    (skills.certifications && skills.certifications.length > 0) ||
-    (certifications && certifications.length > 0)
+  const hasHeader = !!(personal.fullName || personal.professionalTitle)
+  const hasSummary = !!personal.professionalSummary
+  const hasExperience = experience.length > 0
+  const hasEducation = education.length > 0
+  const hasProjects = projects.length > 0
+  const hasSkills = !!(skills.technical && skills.technical.length) ||
+    !!(skills.soft && skills.soft.length) ||
+    !!(skills.languages && skills.languages.length) ||
+    !!(skills.certifications && skills.certifications.length)
+  const hasCertifications = certifications.length > 0
+
+  const hasAnyContent = hasHeader || hasSummary || hasExperience ||
+    hasEducation || hasProjects || hasSkills || hasCertifications
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {!hasAnyContent ? (
+        {hasAnyContent ? (
+          <View>
+            {hasHeader ? <HeaderBlock personal={personal} /> : null}
+            {hasSummary ? <SummaryBlock summary={personal.professionalSummary} /> : null}
+            {hasExperience ? <ExperienceBlock experience={experience} /> : null}
+            {hasProjects ? <ProjectsBlock projects={projects} /> : null}
+            {hasEducation ? <EducationBlock education={education} /> : null}
+            {hasSkills ? <SkillsBlock skills={skills} /> : null}
+            {hasCertifications ? <CertificationsBlock certifications={certifications} /> : null}
+          </View>
+        ) : (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontSize: 11, color: C.secondary }}>Your resume is empty</Text>
             <Text style={{ fontSize: 9, color: C.secondary, marginTop: 4 }}>Start filling in your details to generate a PDF</Text>
           </View>
-        ) : (
-          <>
-            <HeaderBlock personal={personal} />
-            <SummaryBlock summary={personal.professionalSummary} />
-            <ExperienceBlock experience={experience} />
-            <ProjectsBlock projects={projects} />
-            <EducationBlock education={education} />
-            <SkillsBlock skills={skills} />
-            <CertificationsBlock certifications={certifications} />
-          </>
         )}
       </Page>
     </Document>

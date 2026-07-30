@@ -3,7 +3,8 @@ export async function generateResumePDF(resumeData) {
   const { ResumePDFDocument } = await import('../components/resume/ResumePDF')
 
   const doc = ResumePDFDocument({ data: resumeData })
-  const blob = await pdf(doc).toBlob()
+  const instance = pdf(doc)
+  const blob = await instance.toBlob()
 
   return blob
 }

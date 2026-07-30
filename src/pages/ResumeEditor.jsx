@@ -3,13 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import {
   ChevronDown, Plus, Sparkles, User, BookOpen, Briefcase,
   GraduationCap, Wrench, FolderGit2, Award, Trash2, ArrowLeft,
-  Download, X, Loader2, Eye, Edit3, AlertTriangle,
+  Download, X, Loader2, Eye, Edit3, AlertTriangle, RotateCcw,
 } from 'lucide-react'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import ResumePreview from '../components/resume/ResumePreview'
 import UploadedResumePreview from '../components/resume/UploadedResumePreview'
 import ZoomControls from '../components/resume/ZoomControls'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 import { useResume } from '../context/ResumeContext'
 import { generateResumePDF, downloadBlob, getPDFFilename } from '../services/pdfExport'
 
@@ -157,23 +158,51 @@ function ResumeEditor() {
     setTimeout(() => setToast(null), 3000)
   }
 
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
+
+  const hasResumeData = useCallback(() => {
+    const p = resumeData.personal || {}
+    if (p.fullName || p.professionalTitle || p.email || p.phone || p.location ||
+        p.portfolio || p.linkedin || p.github || p.professionalSummary) return true
+    if ((resumeData.experience || []).length > 0) return true
+    if ((resumeData.education || []).length > 0) return true
+    const skills = resumeData.skills || {}
+    if ((skills.technical || []).length > 0 || (skills.soft || []).length > 0 ||
+        (skills.languages || []).length > 0 || (skills.certifications || []).length > 0) return true
+    if ((resumeData.projects || []).length > 0) return true
+    if ((resumeData.certifications || []).length > 0) return true
+    return false
+  }, [resumeData])
+
+  const handleReset = useCallback(() => {
+    setShowResetConfirm(false)
+    resetToNew()
+    localStorage.removeItem(AUTO_SAVE_KEY)
+    showToast('Resume has been reset')
+  }, [resetToNew])
+
   const handleExportPDF = useCallback(async () => {
     if (isExporting) return
+    if (mode === 'new' && !hasResumeData()) {
+      showToast('Please fill in at least one field before downloading your resume.', 'error')
+      return
+    }
     setIsExporting(true)
     setIsProcessing(true)
     try {
+      console.log('Generating PDF with data keys:', Object.keys(resumeData))
       const blob = await generateResumePDF(resumeData)
       const filename = getPDFFilename(resumeData.personal)
       downloadBlob(blob, filename)
       showToast('PDF downloaded successfully')
     } catch (err) {
-      console.error('PDF export failed:', err)
+      console.error('PDF export failed:', err?.message || err, 'Data keys:', Object.keys(resumeData || {}))
       showToast('Failed to generate PDF. Please try again.', 'error')
     } finally {
       setIsExporting(false)
       setIsProcessing(false)
     }
-  }, [resumeData, isExporting])
+  }, [resumeData, isExporting, hasResumeData, mode])
 
   const handleZoomIn = useCallback(() => setZoom((p) => Math.min(p + 0.1, 2)), [])
   const handleZoomOut = useCallback(() => setZoom((p) => Math.max(p - 0.1, 0.3)), [])
@@ -305,19 +334,31 @@ function ResumeEditor() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleExportPDF}
-            disabled={isExporting}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-label-sm font-medium text-white transition hover:bg-primary/90 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isExporting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
+          <div className="flex items-center gap-2">
+            {mode === 'new' && (
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-outline-variant/50 px-4 py-2 text-label-sm font-medium text-on-surface transition hover:bg-surface-container-low active:scale-95"
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span className="hidden sm:inline">Reset</span>
+              </button>
             )}
-            <span className="hidden sm:inline">{isExporting ? 'Generating...' : 'Download PDF'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={handleExportPDF}
+              disabled={isExporting}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-label-sm font-medium text-white transition hover:bg-primary/90 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">{isExporting ? 'Generating...' : 'Download PDF'}</span>
+            </button>
+          </div>
         </div>
 
         <div className="flex border-b border-outline-variant/20 bg-surface-container-lowest lg:hidden">
@@ -605,6 +646,16 @@ function ResumeEditor() {
           </main>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={handleReset}
+        title="Reset Resume?"
+        message="This will clear all entered resume information. This action cannot be undone."
+        confirmLabel="Reset"
+        confirmVariant="danger"
+      />
 
       {toast && (
         <div className="fixed bottom-6 right-6 z-[70]" role="status" aria-live="polite">
