@@ -52,8 +52,19 @@ export async function parseResume(req, res, next) {
       data: parsed,
     })
   } catch (err) {
-    // Graceful fallback when the AI API is rate-limited or unavailable.
-    if (err.status === 429 || err.message?.includes('429') || err.message?.includes('rate limit')) {
+    const msg = (err.message || '').toLowerCase()
+    const isRateLimit =
+      err.status === 429 ||
+      err.code === 429 ||
+      msg.includes('429') ||
+      msg.includes('rate limit') ||
+      msg.includes('quota') ||
+      msg.includes('exhausted') ||
+      msg.includes('too many requests') ||
+      msg.includes('unavailable') ||
+      msg.includes('resource exhausted')
+
+    if (isRateLimit) {
       return res.status(200).json({
         success: true,
         message: 'Resume parsed heuristically (AI unavailable — partial result).',
@@ -61,6 +72,7 @@ export async function parseResume(req, res, next) {
         note: 'Gemini API is rate-limited. The result was built from a basic heuristic.',
       })
     }
+
     next(err)
   }
 }

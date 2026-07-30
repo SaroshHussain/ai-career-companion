@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import TopNavbar from './TopNavbar'
 
 function DashboardLayout({ children }) {
+  const location = useLocation()
+  const isResumeEditor =
+    location.pathname === '/dashboard/resume/new' ||
+    location.pathname.startsWith('/dashboard/resume/edit')
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobile, setIsMobile] = useState(true)
@@ -28,7 +34,7 @@ function DashboardLayout({ children }) {
         className="flex flex-1 flex-col overflow-hidden transition-all duration-300"
         style={{ marginLeft: isMobile ? 0 : sidebarWidth }}
       >
-        <TopNavbar onMenuToggle={() => setIsSidebarOpen((prev) => !prev)} />
+        {!isResumeEditor && <TopNavbar onMenuToggle={() => setIsSidebarOpen((prev) => !prev)} />}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>

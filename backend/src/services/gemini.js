@@ -31,8 +31,25 @@ export async function generateText(prompt) {
   const response = await ai.models.generateContent({
     model: MODEL,
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    config: {
+      maxOutputTokens: 8192,
+      temperature: 0.1,
+    },
   })
 
-  const text = response?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  const candidate = response?.candidates?.[0]
+  const text = candidate?.content?.parts?.[0]?.text || ''
+  const blockReason = candidate?.safetyRatings
+    ?.filter((r) => r.blocked)
+    ?.map((r) => r.category)
+    ?.join(', ')
+
+  if (!text && blockReason) {
+    throw Object.assign(
+      new Error(`Gemini response blocked by safety filters: ${blockReason}`),
+      { status: 422 },
+    )
+  }
+
   return text
 }

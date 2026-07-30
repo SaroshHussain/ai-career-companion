@@ -1,18 +1,15 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   HiOutlineDocumentPlus, HiOutlineArrowPath, HiCheckCircle,
-  HiOutlineCloudArrowUp, HiOutlineSparkles, HiOutlineCog6Tooth,
-  HiOutlineExclamationTriangle,
+  HiOutlineCloudArrowUp, HiOutlineExclamationTriangle,
 } from 'react-icons/hi2'
 import { MdDescription } from 'react-icons/md'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import ResumeOptionCard from '../components/resume/ResumeOptionCard'
-import AIConfigModal from '../components/resume/AIConfigModal'
 import { useResume } from '../context/ResumeContext'
 import { parseResume } from '../services/resumeParser'
-import { getAIConfig, PROVIDERS } from '../services/aiResumeParser'
 
 function UploadZone({ onFileSelected, disabled }) {
   const [isDragging, setIsDragging] = useState(false)
@@ -134,12 +131,6 @@ function ResumeBuilder() {
   const [status, setStatus] = useState(STATUS.IDLE)
   const [error, setError] = useState(null)
   const [parsedFileInfo, setParsedFileInfo] = useState(null)
-  const [showConfig, setShowConfig] = useState(false)
-  const [aiConfig, setAiConfig] = useState(null)
-
-  useEffect(() => {
-    setAiConfig(getAIConfig())
-  }, [showConfig])
 
   const handleCreate = () => {
     resetToNew()
@@ -182,35 +173,16 @@ function ResumeBuilder() {
     navigate('/dashboard/resume/edit', { state: { mode: 'upload' } })
   }
 
-  const providerLabel = aiConfig && aiConfig.provider !== 'local'
-    ? Object.values(PROVIDERS).find((p) => p.id === aiConfig.provider)?.label || 'AI'
-    : null
-
   const isProcessing = status === STATUS.UPLOADING || status === STATUS.PARSING
 
   return (
     <DashboardLayout>
       <div className="mx-auto max-w-3xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-headline-lg text-on-surface">Resume Builder</h1>
-            <p className="mt-1 text-body-md text-on-surface-variant">
-              Create a new resume from scratch or upload an existing one to edit it.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowConfig(true)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-label-sm transition ${
-              providerLabel
-                ? 'border-primary/30 bg-primary/5 text-primary'
-                : 'border-outline-variant/50 text-on-surface-variant hover:border-outline-variant hover:text-on-surface'
-            }`}
-          >
-            <HiOutlineSparkles className="text-base" />
-            {providerLabel || 'AI Parser'}
-            <HiOutlineCog6Tooth className="text-sm" />
-          </button>
+        <div>
+          <h1 className="text-headline-lg text-on-surface">Resume Builder</h1>
+          <p className="mt-1 text-body-md text-on-surface-variant">
+            Create a new resume from scratch or upload an existing one to edit it.
+          </p>
         </div>
 
         {/* Uploading state */}
@@ -268,8 +240,6 @@ function ResumeBuilder() {
           )}
         </div>
       </div>
-
-      <AIConfigModal isOpen={showConfig} onClose={() => setShowConfig(false)} />
     </DashboardLayout>
   )
 }

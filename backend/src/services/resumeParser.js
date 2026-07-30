@@ -96,6 +96,7 @@ export async function parseResumeText(resumeText) {
   }
 
   const prompt = buildPrompt(resumeText)
+
   const raw = await generateText(prompt)
 
   if (!raw) {
