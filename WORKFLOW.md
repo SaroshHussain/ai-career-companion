@@ -1,12 +1,16 @@
 # AI Career Companion Development Workflow
 
-This document describes the development workflow used while building the **AI Career Companion Landing Page**. During this assignment, the landing page was implemented twice using two different prompting approaches to evaluate how prompt quality affects code quality, maintainability, and review effort.
+This document describes the development workflow used while building the **AI Career Companion**. It covers the initial landing page implementation comparison as well as the full-featured production build including authentication, dashboard, resume builder, and settings.
 
 ---
 
-# Objective
+## Landing Page Implementation — Prompt Engineering Comparison
 
-Implement the **Landing Page** for the AI Career Companion in two separate branches:
+During the initial phase, the landing page was implemented twice using two different prompting approaches to evaluate how prompt quality affects code quality, maintainability, and review effort.
+
+### Objective
+
+Implement the **Landing Page** in two separate branches:
 
 - **Round One:** Use a single vague prompt and accept the generated output with minimal changes.
 - **Round Two:** Use a detailed prompt including project context, file references, design constraints, reusable component requirements, expected behavior, and a verification step.
@@ -15,18 +19,11 @@ The goal was to compare both implementations and identify how prompt engineering
 
 ---
 
-# Round One — Vague Prompt
+### Round One — Vague Prompt
 
-The first implementation used a simple prompt requesting a landing page for the AI Career Companion without providing detailed project context or constraints.
+The first implementation used a simple prompt requesting a landing page without providing detailed project context or constraints.
 
-The generated page contained the basic sections, including:
-
-- Hero Section
-- Features
-- Call-to-Action
-- Footer
-
-Although functional, several issues became apparent during review:
+The generated page contained basic sections (Hero, Features, CTA, Footer) but had several issues:
 
 - Components were duplicated instead of reused.
 - Folder structure did not fully follow the project architecture.
@@ -35,193 +32,274 @@ Although functional, several issues became apparent during review:
 - Responsiveness required manual fixes.
 - Some sections lacked polish and consistency.
 
-Overall, the implementation worked but required significant cleanup before it matched production-quality standards.
+---
+
+### Round Two — Precise Prompt
+
+The second implementation used a detailed prompt that included references to the existing project structure, folder locations, design system guidelines, Tailwind CSS conventions, color palette, typography hierarchy, responsive requirements, accessibility expectations, and verification instructions.
+
+The generated implementation integrated naturally into the existing project, reused existing components, followed the established folder structure, maintained consistent spacing and typography, and required only minor refinements.
 
 ---
 
-# Round Two — Precise Prompt
+### Lessons Learned
 
-The second implementation used a detailed prompt that included:
-
-- References to the existing project structure.
-- Folder locations for reusable components.
-- Existing design system guidelines.
-- Tailwind CSS conventions.
-- Color palette and typography hierarchy.
-- Responsive design requirements.
-- Accessibility expectations.
-- Verification instructions to build and test the application.
-
-The generated implementation integrated naturally into the existing project.
-
-It successfully reused existing components, followed the established folder structure, maintained consistent spacing and typography, and required only minor refinements before completion.
+Prompt quality has a direct impact on development quality. Providing detailed project context, architectural constraints, reusable component guidelines, expected behavior, and verification requirements enables AI to generate cleaner, more maintainable, and production-ready code.
 
 ---
 
-# Correctness
+## Standard Development Workflow
 
-The precise prompt produced significantly more accurate results.
+For all future development, the following workflow is used:
 
-The generated code:
+### 1. Understand
 
-- Followed the existing architecture.
-- Reused components instead of duplicating them.
-- Matched the requested landing page layout.
-- Integrated cleanly with the existing project.
-- Required minimal manual fixes.
+- Read the project documentation and CLAUDE.md.
+- Understand the folder structure and component hierarchy.
+- Review existing components before creating new ones.
+- Follow the project's design system (colors, typography, spacing, shadows).
 
-The vague implementation required considerably more corrections before it was suitable for production.
+### 2. Plan
 
----
+- Break the task into smaller, verifiable steps.
+- Identify reusable UI components and data patterns.
+- Decide file placement following the existing structure.
+- Consider responsive behavior, accessibility, and edge cases.
+- Review the existing codebase for patterns to follow.
 
-# Accessibility
+### 3. Build
 
-The second implementation followed better accessibility practices by including:
+- Use React functional components only.
+- One component per file, focused on a single responsibility.
+- Reuse existing UI primitives from `components/ui/`.
+- Store configurable content in `data/` — never hardcode.
+- Use custom hooks for reusable logic in `hooks/`.
+- Keep styling consistent using Tailwind CSS utility classes.
+- Use the design system tokens defined in `tailwind.config.js`.
 
-- Semantic HTML elements.
-- Proper heading hierarchy.
-- Accessible button labels.
-- Keyboard-friendly navigation.
-- Readable spacing and typography.
-- Responsive layouts for different screen sizes.
+### 4. Verify
 
-These improvements created a more user-friendly and inclusive interface.
-
----
-
-# Edge Cases
-
-The detailed prompt encouraged handling several edge cases, including:
-
-- Mobile, tablet, and desktop responsiveness.
-- Long text within cards and sections.
-- Different screen widths.
-- Consistent alignment regardless of content length.
-- Graceful layout behavior on smaller devices.
-
-The vague implementation handled these cases less consistently and required manual adjustments.
+- Test responsiveness across desktop, tablet, and mobile.
+- Check accessibility (keyboard navigation, ARIA labels, semantic HTML).
+- Remove unused imports and dead code.
+- Verify no console errors in development.
+- Run the build:
+  ```bash
+  npm run build
+  ```
+- The project must build successfully before committing.
 
 ---
 
-# Review Effort
+## Authentication Workflow
 
-The difference in review effort between the two implementations was substantial.
-
-### Vague Prompt
-
-The review focused on:
-
-- Refactoring duplicated components.
-- Fixing inconsistent styling.
-- Improving responsiveness.
-- Aligning the implementation with the design system.
-- Cleaning up the project structure.
-
-### Precise Prompt
-
-The review mainly involved:
-
-- Verifying responsiveness.
-- Checking visual consistency.
-- Running the build process.
-- Confirming accessibility.
-- Performing minor UI refinements.
-
-Because the implementation already followed the project conventions, far less manual work was required.
-
----
-
-# Lessons Learned
-
-This exercise demonstrated that prompt quality has a direct impact on development quality.
-
-Providing detailed project context, architectural constraints, reusable component guidelines, expected behavior, and verification requirements enables AI to generate cleaner, more maintainable, and production-ready code.
-
-Instead of relying on the model to infer project conventions, explicitly describing those conventions produces better results and reduces review time.
-
----
-
-# Standard Development Workflow
-
-For future development of the AI Career Companion, the following workflow will be followed:
-
-## 1. Understand
-
-Before writing code:
-
-- Read the project documentation.
-- Understand the folder structure.
-- Review existing components.
-- Follow the project's design system.
-- Identify reusable code before creating new components.
-
----
-
-## 2. Plan
-
-Before implementation:
-
-- Break the task into smaller steps.
-- Identify reusable UI components.
-- Decide where files should be placed.
-- Consider responsive behavior and accessibility.
-- Avoid unnecessary complexity.
-
----
-
-## 3. Build
-
-During implementation:
-
-- Follow the existing folder structure.
-- Create reusable React components.
-- Keep components focused on a single responsibility.
-- Reuse existing UI whenever possible.
-- Maintain consistent styling using Tailwind CSS.
-- Follow the project's spacing, typography, and color system.
-
----
-
-## 4. Verify
-
-Before completing the task:
-
-- Test responsiveness.
-- Check accessibility.
-- Remove unused code.
-- Remove unused imports.
-- Verify there are no console errors.
-- Ensure consistent spacing and typography.
-
-Run:
-
-```bash
-npm run dev
-npm run build
+```
+User navigates to /dashboard
+        ↓
+ProtectedRoute checks auth state
+        ↓
+Not authenticated → redirect to /login
+Authenticated → render dashboard
 ```
 
-The project should build successfully before committing changes.
+### Login flow:
+
+1. User enters email and password.
+2. On submit, credentials are validated against the hardcoded store:
+   - Email: `hsarosh569@gmail.com`
+   - Password: `12345678`
+3. Invalid credentials show an inline error: "Invalid email or password."
+4. Valid credentials create an auth object `{ isAuthenticated, email, name }` stored in React Context and persisted to `localStorage`.
+5. User is redirected to `/dashboard`.
+6. On page refresh, `localStorage` restores the session automatically.
+7. Already-authenticated users are auto-redirected from `/login` to `/dashboard`.
+
+### Sign Out:
+
+1. User clicks "Sign Out" in the sidebar.
+2. A centered confirmation modal appears with the title "Sign Out" and message: "Are you sure you want to sign out? You will need to sign in again to access your dashboard."
+3. Cancel closes the modal; Sign Out clears auth state and `localStorage`, then redirects to `/login`.
+
+### Route protection:
+
+- All `/dashboard/*` routes are wrapped with `<ProtectedRoute>`.
+- Unauthenticated users are redirected to `/login` with `replace: true`.
+- The auth state is managed centrally via `AuthContext` and the `useAuth` hook.
 
 ---
 
-## AI Mistakes Encountered
+## Dashboard Workflow
 
-While generating the landing page, the AI made several mistakes that required manual review and correction:
+### Layout:
 
-- Created duplicate components instead of reusing existing ones.
-- Ignored the project's folder structure in some places.
-- Used inconsistent spacing, typography, and styling compared to the design system.
-- Added unnecessary code that increased complexity.
-- Missed responsive adjustments for certain screen sizes.
-- Did not fully follow the existing color palette and UI conventions.
-- Generated some hardcoded content instead of extracting reusable data.
-- Included unused imports and redundant code.
-- Required manual cleanup to match the project's coding standards.
+- Fixed left sidebar with navigation items.
+- Top navbar with search bar, notifications icon, and AI Assistant button.
+- Main content area scrolls independently.
+- Sidebar can be collapsed/expanded on desktop.
+- On mobile, sidebar is hidden by default and opened via hamburger menu overlay.
 
-These issues were much more common when using the vague prompt. The precise prompt, which inclugit ded project context, constraints, file references, and verification steps, produced cleaner, more maintainable code and significantly reduced the amount of manual review required.
+### Empty states:
 
-# Conclusion
+The dashboard shows clean empty states instead of placeholder analytics:
 
-The comparison between vague and precise prompting clearly demonstrated that detailed prompts produce higher-quality implementations with fewer revisions. Clear instructions regarding architecture, reusable components, design conventions, responsiveness, accessibility, and verification significantly reduce review effort while improving correctness and maintainability.
+- **Resume Builder** — "No resume has been created yet." + CTA button
+- **Job Finder** — "No job searches yet."
+- **Interview Coach** — "No interview sessions yet."
+- **Cover Letter** — "No cover letters created yet."
 
-Going forward, I will follow the **Understand → Plan → Build → Verify** workflow whenever using AI-assisted development to ensure every contribution moves the AI Career Companion closer to a production-ready application.
+### User greeting:
+
+The welcome message uses the authenticated user's name: "Welcome back, Sarosh Hussain!"
+
+---
+
+## Resume Builder Workflow
+
+### Option 1: Upload Existing Resume
+
+```
+Upload Resume (PDF / DOC / DOCX)
+        ↓
+Extract raw text (pdfjs-dist / mammoth)
+        ↓
+Check AI provider configuration
+        ↓
+If AI configured → Send text to AI model (Gemini / OpenAI / Hugging Face)
+Else → Use heuristic parser (local fallback)
+        ↓
+AI returns structured JSON with sections:
+  - Personal info (name, email, phone, links)
+  - Professional summary
+  - Experience (position, company, dates, bullet points)
+  - Education (institution, degree, field, dates)
+  - Skills (technical, soft, languages, certifications)
+  - Projects (name, description, technologies, links)
+        ↓
+Populate editor forms with structured data
+        ↓
+Forms are fully editable
+        ↓
+Live preview updates in real time
+        ↓
+User can download the updated resume as PDF
+```
+
+### AI Provider Configuration:
+
+- The AI parser is provider-agnostic.
+- Supported providers: **Google Gemini**, **OpenAI**, **Hugging Face**.
+- Users enter their own API key via the "AI Parser Settings" button on the Resume Builder landing page.
+- Keys are stored in `localStorage` and never sent to external servers.
+- If no AI provider is configured, the built-in heuristic parser is used as fallback.
+
+### Prompt Engineering for AI Parsing:
+
+The AI is given a strict system prompt instructing it to return ONLY valid JSON in the expected schema. Rules include:
+- Maintain original hierarchy (companies with jobs, dates with entries).
+- Bullet points become array items.
+- Identify sections: Personal, Summary, Experience, Education, Skills, Projects, Certifications, Languages.
+- Unrecognized content goes into an "uncategorized" field.
+- No markdown, no code fences, no explanation — pure JSON.
+
+### Option 2: Create New Resume
+
+1. User clicks "Create New Resume" on the Resume Builder landing page.
+2. Multi-step form wizard with 6 steps:
+   - **Personal** — Name, title, email, phone, location, links, summary
+   - **Education** — Institution, degree, field, dates (add/remove multiple entries)
+   - **Experience** — Job title, company, dates, description, achievements (add/remove multiple)
+   - **Skills** — Technical skills, soft skills, certifications (editable tag-based input)
+   - **Projects** — Name, description, technologies, links (add/remove multiple)
+   - **Preview** — Full A4 document preview with zoom controls
+3. Live preview updates instantly as forms change.
+4. Download the final resume as a PDF using `react-to-print`.
+
+### Resume Editor Layout:
+
+- **Left panel:** Scrollable 6-step stepper with form content.
+- **Right panel:** Sticky A4-sized live preview with zoom controls (zoom in, zoom out, fit width, fit page).
+- On mobile, the layout stacks vertically (forms above, preview below).
+- Uploaded document reference shown as collapsible section above the preview.
+
+### Resume Preview:
+
+- A4 dimensions (595px × 842px) with proper margins.
+- Professional typography with section headings, bullet points, and spacing.
+- Multi-page support for long resumes.
+- Sections: header, summary, experience, projects, education, skills, languages, certifications.
+- No raw text — all content rendered as structured HTML.
+- Soft shadow and responsive scaling.
+
+---
+
+## Settings Workflow
+
+### Page structure:
+
+- Tabbed interface with 5 tabs: **Profile**, **Account**, **Notifications**, **Security**, **Billing**.
+- Only the Profile tab is fully implemented; other tabs show a "Coming Soon" placeholder.
+
+### Profile tab sections:
+
+1. **Profile** — Avatar upload (PNG/JPG, 2MB limit, preview immediately), full name, professional title, bio textarea.
+2. **Personal Information** — Email (validated), phone (validated), location.
+3. **Professional Links** — LinkedIn, portfolio website, GitHub (URL validated).
+4. **Appearance** — Light / Dark / System theme selector. Theme is applied immediately via CSS variables on `<html>` and persisted in `localStorage`.
+5. **Save / Cancel** — Save persists all fields to `localStorage` and shows a success toast. Cancel restores the last saved state.
+
+### Dark mode:
+
+- All custom design tokens are defined as CSS custom properties in `src/index.css`.
+- A `.dark` class override block defines dark-mode equivalents.
+- Selecting "Dark" adds `class="dark"` to `<html>`.
+- Selecting "System" listens to `prefers-color-scheme` media query.
+- Every component using the custom Tailwind color classes automatically switches theme.
+
+---
+
+## Code Architecture
+
+### Context providers
+
+- **`AuthContext`** — Authentication state, login/logout methods, localStorage persistence with SSR guards.
+- **`ResumeContext`** — Resume data state, CRUD operations for all sections (personal, education, experience, skills, projects), upload file tracking.
+
+### Services
+
+- **`fileExtractor.js`** — Pure text extraction from PDF/DOCX using pdfjs-dist and mammoth.
+- **`aiResumeParser.js`** — Provider-agnostic AI parsing with Gemini, OpenAI, and Hugging Face support. Includes prompt engineering and JSON extraction.
+- **`heuristicParser.js`** — Built-in fallback parser with section detection, date parsing, and field extraction. Code-split as a separate chunk.
+- **`resumeParser.js`** — Orchestration layer: extract text, try AI (if configured), fall back to heuristic, normalize output.
+
+### Component organization
+
+- `components/landing/` — Landing page sections (Hero, FeatureBento, HowItWorks, FAQ, Footer, Navbar).
+- `components/dashboard/` — Dashboard layout (DashboardLayout, Sidebar, TopNavbar, StatCard, etc.).
+- `components/resume/` — Resume builder components (stepper, forms, preview, zoom controls, upload zone).
+- `components/settings/` — Settings page components (tabs, profile section, personal info, links, appearance).
+- `components/ui/` — Reusable UI primitives (Button, Input, Reveal, ConfirmDialog, Toast).
+
+---
+
+## Responsive Design
+
+All pages are responsive across desktop, tablet, and mobile:
+
+- **Sidebar:** Fixed on desktop, collapsible. Overlay on mobile with hamburger toggle.
+- **Dashboard:** Cards wrap in responsive grid (4 → 2 → 1 columns).
+- **Resume Editor:** Two-column on desktop, stacked on mobile.
+- **Settings:** Two-column inputs collapse to single column.
+- **Auth pages:** Centered card layout with flexible width.
+- **Landing:** Fluid typography and spacing at all breakpoints.
+- **No horizontal scrolling** anywhere.
+
+---
+
+## Accessibility
+
+- Semantic HTML (`<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`, `<footer>`).
+- ARIA attributes (`role="dialog"`, `aria-modal`, `aria-labelledby`, `aria-selected`, `aria-expanded`).
+- Keyboard navigation (Escape closes modals, Tab cycles focus, Enter submits forms).
+- Focus management (auto-focus modal content, restore focus on close).
+- Screen reader labels on icon-only buttons.
+- `prefers-reduced-motion` compatible (CSS animations are subtle and short).
