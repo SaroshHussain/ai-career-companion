@@ -29,3 +29,11 @@ export async function parseResumeText(text) {
     body: JSON.stringify({ text }),
   })
 }
+
+export async function generateSummary(resumeData) {
+  return request('/ai/generate-summary', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resumeData }),
+  })
+}

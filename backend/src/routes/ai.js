@@ -2,10 +2,11 @@
 // the Gemini model. All routes are prefixed with /api in app.js.
 
 import { Router } from 'express'
-import { testAi } from '../controllers/aiController.js'
+import { testAi, generateSummary } from '../controllers/aiController.js'
 
 const router = Router()
 
 router.get('/test-ai', testAi)
+router.post('/ai/generate-summary', generateSummary)
 
 export default router

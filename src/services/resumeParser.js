@@ -38,6 +38,8 @@ function normalizeBackendData(apiData) {
     experience: addIds(d.experience, 'exp').map((e) => ({
       jobTitle: e.jobTitle || '',
       company: e.company || '',
+      employmentType: e.employmentType || '',
+      location: e.location || '',
       startDate: e.startDate || '',
       endDate: e.endDate || '',
       currentlyWorking: e.currentlyWorking || /present|current|now/i.test(e.endDate || ''),
@@ -60,12 +62,12 @@ function normalizeBackendData(apiData) {
       technical: Array.isArray(d.skills?.technical) ? d.skills.technical : [],
       soft: Array.isArray(d.skills?.soft) ? d.skills.soft : [],
       languages: Array.isArray(d.skills?.languages) ? d.skills.languages : [],
-      certifications: (d.certifications || []).map((c) => c.name || ''),
     },
     certifications: addIds(d.certifications, 'cert').map((c) => ({
       name: c.name || '',
       issuer: c.issuer || '',
       date: c.date || '',
+      credentialId: c.credentialId || '',
       url: c.url || '',
       ...c,
     })),

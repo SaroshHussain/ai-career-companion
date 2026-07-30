@@ -8,11 +8,12 @@ import {
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import ResumePreview from '../components/resume/ResumePreview'
-import UploadedResumePreview from '../components/resume/UploadedResumePreview'
 import ZoomControls from '../components/resume/ZoomControls'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import { useResume } from '../context/ResumeContext'
 import { generateResumePDF, downloadBlob, getPDFFilename } from '../services/pdfExport'
+import { isResumeEmpty } from '../services/resumeValidation'
+import { generateSummary as apiGenerateSummary } from '../services/api'
 
 const A4_WIDTH = 595
 const A4_HEIGHT = 842
@@ -130,7 +131,6 @@ function ResumeEditor() {
 
   const {
     resumeData,
-    uploadedFile,
     updatePersonal,
     updateSummary,
     addExperience, updateExperience, removeExperience,
@@ -144,34 +144,43 @@ function ResumeEditor() {
 
   const [zoom, setZoom] = useState(0.7)
   const [toast, setToast] = useState(null)
+  const [toastTitle, setToastTitle] = useState(null)
   const [toastType, setToastType] = useState('success')
   const [isProcessing, setIsProcessing] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [isSummaryGenerating, setIsSummaryGenerating] = useState(false)
   const [aiGeneratedFields] = useState(new Set())
   const [mobileView, setMobileView] = useState('editor')
   const containerRef = useRef(null)
   const saveTimer = useRef(null)
 
+  const clearToast = useCallback(() => {
+    setToast(null)
+    setToastTitle(null)
+  }, [])
+
   const showToast = (msg, type = 'success') => {
+    setToastTitle(null)
     setToast(msg)
     setToastType(type)
-    setTimeout(() => setToast(null), 3000)
+    setTimeout(clearToast, 3000)
   }
+
+  const showWarningToast = useCallback((title, message) => {
+    setToastTitle(title)
+    setToast(message)
+    setToastType('error')
+    setTimeout(clearToast, 5000)
+  }, [clearToast])
 
   const [showResetConfirm, setShowResetConfirm] = useState(false)
 
-  const hasResumeData = useCallback(() => {
-    const p = resumeData.personal || {}
-    if (p.fullName || p.professionalTitle || p.email || p.phone || p.location ||
-        p.portfolio || p.linkedin || p.github || p.professionalSummary) return true
-    if ((resumeData.experience || []).length > 0) return true
-    if ((resumeData.education || []).length > 0) return true
-    const skills = resumeData.skills || {}
-    if ((skills.technical || []).length > 0 || (skills.soft || []).length > 0 ||
-        (skills.languages || []).length > 0 || (skills.certifications || []).length > 0) return true
-    if ((resumeData.projects || []).length > 0) return true
-    if ((resumeData.certifications || []).length > 0) return true
-    return false
+  const handleResetClick = useCallback(() => {
+    if (isResumeEmpty(resumeData)) {
+      showWarningToast('Resume is already empty', 'There is nothing to reset.')
+      return
+    }
+    setShowResetConfirm(true)
   }, [resumeData])
 
   const handleReset = useCallback(() => {
@@ -183,14 +192,13 @@ function ResumeEditor() {
 
   const handleExportPDF = useCallback(async () => {
     if (isExporting) return
-    if (mode === 'new' && !hasResumeData()) {
-      showToast('Please fill in at least one field before downloading your resume.', 'error')
+    if (mode === 'new' && isResumeEmpty(resumeData)) {
+      showWarningToast('Resume is empty', 'Please fill in at least one field before downloading your resume.')
       return
     }
     setIsExporting(true)
     setIsProcessing(true)
     try {
-      console.log('Generating PDF with data keys:', Object.keys(resumeData))
       const blob = await generateResumePDF(resumeData)
       const filename = getPDFFilename(resumeData.personal)
       downloadBlob(blob, filename)
@@ -202,7 +210,7 @@ function ResumeEditor() {
       setIsExporting(false)
       setIsProcessing(false)
     }
-  }, [resumeData, isExporting, hasResumeData, mode])
+  }, [resumeData, isExporting, mode])
 
   const handleZoomIn = useCallback(() => setZoom((p) => Math.min(p + 0.1, 2)), [])
   const handleZoomOut = useCallback(() => setZoom((p) => Math.max(p - 0.1, 0.3)), [])
@@ -248,10 +256,39 @@ function ResumeEditor() {
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
   }, [resumeData, mode])
 
-  const aiGenerateSummary = () => showToast('AI summary generation coming soon')
-  const aiImproveBullet = () => showToast('AI bullet improvement coming soon')
-  const aiSuggestSkills = () => showToast('AI skill suggestions coming soon')
+  const handleGenerateSummary = useCallback(async () => {
+    const hasData =
+      resumeData.experience?.length > 0 ||
+      resumeData.education?.length > 0 ||
+      (resumeData.skills?.technical?.length > 0) ||
+      (resumeData.skills?.soft?.length > 0) ||
+      resumeData.projects?.length > 0 ||
+      resumeData.certifications?.length > 0 ||
+      resumeData.personal?.professionalTitle
 
+    if (!hasData) {
+      showWarningToast('Not enough information', 'Please complete more resume sections before generating a professional summary.')
+      return
+    }
+
+    if (isSummaryGenerating) return
+    setIsSummaryGenerating(true)
+
+    try {
+      const result = await apiGenerateSummary(resumeData)
+      if (result?.data?.summary) {
+        updateSummary(result.data.summary)
+        showToast('Professional summary generated successfully')
+      }
+    } catch (err) {
+      console.error('Summary generation failed:', err?.message || err)
+      showToast('Unable to generate summary. Please try again.', 'error')
+    } finally {
+      setIsSummaryGenerating(false)
+    }
+  }, [resumeData, isSummaryGenerating, updateSummary])
+
+  const aiImproveBullet = () => showToast('AI bullet improvement coming soon')
   const setPersonal = (field) => (e) => updatePersonal(field, e.target.value)
 
   const renderField = (label, value, onChange, opts = {}) => {
@@ -335,10 +372,10 @@ function ResumeEditor() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {mode === 'new' && (
+            {(mode === 'new' || mode === 'upload') && (
               <button
                 type="button"
-                onClick={() => setShowResetConfirm(true)}
+                onClick={handleResetClick}
                 className="inline-flex items-center gap-2 rounded-lg border border-outline-variant/50 px-4 py-2 text-label-sm font-medium text-on-surface transition hover:bg-surface-container-low active:scale-95"
               >
                 <RotateCcw className="h-4 w-4" />
@@ -423,11 +460,16 @@ function ResumeEditor() {
                   />
                   <button
                     type="button"
-                    onClick={aiGenerateSummary}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary/15 bg-primary/[0.03] px-2.5 py-1.5 text-label-sm text-primary transition hover:bg-primary/10 active:scale-95"
+                    onClick={handleGenerateSummary}
+                    disabled={isSummaryGenerating}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-primary/15 bg-primary/[0.03] px-2.5 py-1.5 text-label-sm text-primary transition hover:bg-primary/10 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Generate with AI
+                    {isSummaryGenerating ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5" />
+                    )}
+                    {isSummaryGenerating ? 'Generating...' : 'Generate with AI'}
                   </button>
                 </div>
               </Section>
@@ -510,20 +552,7 @@ function ResumeEditor() {
                 )}
               </Section>
 
-              <Section
-                title="Skills"
-                icon={Wrench}
-                actions={
-                  <button
-                    type="button"
-                    onClick={aiSuggestSkills}
-                    className="rounded-lg p-1.5 text-primary transition hover:bg-primary/5 active:scale-95"
-                    title="Suggest with AI"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                  </button>
-                }
-              >
+              <Section title="Skills" icon={Wrench}>
                 <div className="space-y-3">
                   <div>
                     <p className="mb-1 text-label-sm text-on-surface-variant">Technical</p>
@@ -621,12 +650,6 @@ function ResumeEditor() {
               />
             </div>
 
-            {uploadedFile && (
-              <div className="border-b border-outline-variant/20 bg-surface-container-lowest px-4 py-2">
-                <UploadedResumePreview file={uploadedFile} />
-              </div>
-            )}
-
             <div ref={containerRef} className="flex-1 overflow-auto p-6">
               <div
                 style={{
@@ -666,17 +689,30 @@ function ResumeEditor() {
             }
             .toast-enter { animation: toast-slide-up 250ms ease-out; }
           `}</style>
-          <div className={`toast-enter flex items-center gap-3 rounded-xl border px-5 py-3.5 shadow-lg ${
+          <div className={`toast-enter flex items-start gap-3 rounded-xl border px-5 py-3.5 shadow-lg ${
             toastType === 'error'
-              ? 'border-error/20 bg-error-container text-on-error-container'
+              ? 'border-error/20 bg-error-container'
               : 'border-primary/15 bg-white'
           }`}>
             {toastType === 'error' ? (
-              <AlertTriangle className="h-5 w-5 text-error shrink-0" />
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-error shrink-0" />
             ) : (
-              <Sparkles className="h-5 w-5 text-primary shrink-0" />
+              <Sparkles className="mt-0.5 h-5 w-5 text-primary shrink-0" />
             )}
-            <p className={`text-body-sm font-medium ${toastType === 'error' ? 'text-on-error-container' : 'text-on-surface'}`}>{toast}</p>
+            <div className="flex-1 min-w-0">
+              {toastTitle && (
+                <p className="text-body-sm font-semibold text-on-surface">{toastTitle}</p>
+              )}
+              <p className={`text-body-sm ${toastTitle ? 'text-on-surface-variant mt-0.5' : toastType === 'error' ? 'text-on-error-container' : 'text-on-surface'}`}>{toast}</p>
+            </div>
+            <button
+              type="button"
+              onClick={clearToast}
+              className="rounded-md p-0.5 text-on-surface-variant/60 hover:text-on-surface transition shrink-0"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
       )}
