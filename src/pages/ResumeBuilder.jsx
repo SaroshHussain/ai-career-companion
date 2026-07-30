@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { HiOutlineDocumentPlus, HiOutlineArrowPath, HiCheckCircle, HiOutlineCloudArrowUp, HiOutlineSparkles, HiOutlineCog6Tooth } from 'react-icons/hi2'
+import {
+  HiOutlineDocumentPlus, HiOutlineArrowPath, HiCheckCircle,
+  HiOutlineCloudArrowUp, HiOutlineSparkles, HiOutlineCog6Tooth,
+  HiOutlineExclamationTriangle,
+} from 'react-icons/hi2'
 import { MdDescription } from 'react-icons/md'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
@@ -38,9 +42,7 @@ function UploadZone({ onFileSelected, disabled }) {
         onDrop={disabled ? undefined : handleDrop}
         onDragOver={disabled ? undefined : handleDragOver}
         onDragLeave={disabled ? undefined : handleDragLeave}
-        onClick={() => {
-          if (!disabled) inputRef.current?.click()
-        }}
+        onClick={() => { if (!disabled) inputRef.current?.click() }}
         className={`flex w-full cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
           disabled ? 'cursor-not-allowed opacity-60' : ''
         } ${
@@ -61,16 +63,11 @@ function UploadZone({ onFileSelected, disabled }) {
         <HiOutlineCloudArrowUp className="text-4xl text-primary" aria-hidden />
         <div>
           <p className="text-body-sm font-medium text-on-surface">Upload Resume</p>
-          <p className="mt-1 text-label-sm text-on-surface-variant">
-            Drag & drop or click to browse
-          </p>
+          <p className="mt-1 text-label-sm text-on-surface-variant">Drag & drop or click to browse</p>
         </div>
         <div className="flex gap-2">
           {['PDF', 'DOC', 'DOCX'].map((format) => (
-            <span
-              key={format}
-              className="rounded-md bg-surface-container-low px-2 py-0.5 text-label-sm text-on-surface-variant"
-            >
+            <span key={format} className="rounded-md bg-surface-container-low px-2 py-0.5 text-label-sm text-on-surface-variant">
               {format}
             </span>
           ))}
@@ -129,11 +126,13 @@ function SuccessState({ fileName, fileSize, onStartEditing }) {
   )
 }
 
+const STATUS = { IDLE: 'idle', UPLOADING: 'uploading', PARSING: 'parsing', SUCCESS: 'success', ERROR: 'error' }
+
 function ResumeBuilder() {
   const navigate = useNavigate()
   const { loadParsedResume, resetToNew } = useResume()
-  const [parsing, setParsing] = useState(false)
-  const [parseError, setParseError] = useState(null)
+  const [status, setStatus] = useState(STATUS.IDLE)
+  const [error, setError] = useState(null)
   const [parsedFileInfo, setParsedFileInfo] = useState(null)
   const [showConfig, setShowConfig] = useState(false)
   const [aiConfig, setAiConfig] = useState(null)
@@ -144,12 +143,12 @@ function ResumeBuilder() {
 
   const handleCreate = () => {
     resetToNew()
-    navigate('/dashboard/resume/edit', { state: { mode: 'new' } })
+    navigate('/dashboard/resume/new')
   }
 
   const handleFileSelected = async (file) => {
-    setParsing(true)
-    setParseError(null)
+    setStatus(STATUS.UPLOADING)
+    setError(null)
     setParsedFileInfo(null)
 
     try {
@@ -165,13 +164,18 @@ function ResumeBuilder() {
         }
         loadParsedResume(parsed, fileInfo)
         setParsedFileInfo({ name: file.name, size: file.size })
-        setParsing(false)
+        setStatus(STATUS.SUCCESS)
       }
       reader.readAsDataURL(file)
     } catch (err) {
-      setParseError(err.message || 'Failed to parse resume. Please try again.')
-      setParsing(false)
+      setError(err.message || 'Failed to parse resume. Please try again.')
+      setStatus(STATUS.ERROR)
     }
+  }
+
+  const handleRetry = () => {
+    setStatus(STATUS.IDLE)
+    setError(null)
   }
 
   const handleStartEditing = () => {
@@ -181,6 +185,8 @@ function ResumeBuilder() {
   const providerLabel = aiConfig && aiConfig.provider !== 'local'
     ? Object.values(PROVIDERS).find((p) => p.id === aiConfig.provider)?.label || 'AI'
     : null
+
+  const isProcessing = status === STATUS.UPLOADING || status === STATUS.PARSING
 
   return (
     <DashboardLayout>
@@ -207,16 +213,39 @@ function ResumeBuilder() {
           </button>
         </div>
 
-        {parsing && (
+        {/* Uploading state */}
+        {status === STATUS.UPLOADING && (
           <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
             <HiOutlineArrowPath className="animate-spin text-lg text-primary" aria-hidden />
-            <p className="text-body-sm text-primary">Parsing your resume...</p>
+            <p className="text-body-sm text-primary">Uploading your resume...</p>
           </div>
         )}
 
-        {parseError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-body-sm text-red-700">
-            {parseError}
+        {/* Parsing state */}
+        {status === STATUS.PARSING && (
+          <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+            <HiOutlineArrowPath className="animate-spin text-lg text-primary" aria-hidden />
+            <p className="text-body-sm text-primary">Parsing resume with AI...</p>
+          </div>
+        )}
+
+        {/* Error state */}
+        {status === STATUS.ERROR && (
+          <div className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-4">
+            <div className="flex items-start gap-3">
+              <HiOutlineExclamationTriangle className="mt-0.5 text-lg text-red-500 shrink-0" aria-hidden />
+              <div>
+                <p className="text-body-sm font-medium text-red-800">Upload failed</p>
+                <p className="mt-0.5 text-label-sm text-red-700">{error}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="self-start rounded-lg border border-red-300 bg-white px-3 py-1.5 text-label-sm font-medium text-red-700 transition hover:bg-red-50"
+            >
+              Try again
+            </button>
           </div>
         )}
 
@@ -228,14 +257,14 @@ function ResumeBuilder() {
             onClick={handleCreate}
           />
 
-          {parsedFileInfo ? (
+          {status === STATUS.SUCCESS ? (
             <SuccessState
               fileName={parsedFileInfo.name}
               fileSize={parsedFileInfo.size}
               onStartEditing={handleStartEditing}
             />
           ) : (
-            <UploadZone onFileSelected={handleFileSelected} disabled={parsing} />
+            <UploadZone onFileSelected={handleFileSelected} disabled={isProcessing} />
           )}
         </div>
       </div>

@@ -1,80 +1,31 @@
-import { extractText } from './fileExtractor'
-import { getAIConfig, aiParse } from './aiResumeParser'
+// Resume parser service — uploads a file to the backend, extracts text,
+// parses it with Gemini AI, and normalises the result for ResumeContext.
 
-function normalizeAIData(aiData) {
-  const d = aiData || {}
+import { uploadResume, parseResumeText } from './api'
 
-  const personal = {
-    fullName: d.personal?.fullName || '',
-    professionalTitle: d.personal?.professionalTitle || '',
-    email: d.personal?.email || '',
-    phone: d.personal?.phone || '',
-    location: d.personal?.location || '',
-    portfolio: d.personal?.portfolio || '',
-    linkedin: d.personal?.linkedin || '',
-    github: d.personal?.github || '',
-    professionalSummary: d.summary || '',
-  }
-
-  const experience = (d.experience || []).map((e, i) => ({
-    id: `exp-${Date.now()}-${i}`,
-    jobTitle: e.position || '',
-    company: e.company || '',
-    startDate: e.startDate || '',
-    endDate: e.endDate || '',
-    currentlyWorking: /present|current|now/i.test(e.endDate || ''),
-    description: Array.isArray(e.description) ? e.description.join('\n') : (e.description || ''),
-    achievements: '',
+function addIds(arr, prefix) {
+  return (arr || []).map((item, i) => ({
+    id: `${prefix}-${Date.now()}-${i}`,
+    ...item,
   }))
-
-  const education = (d.education || []).map((e, i) => ({
-    id: `edu-${Date.now()}-${i}`,
-    institution: e.institution || '',
-    degree: e.degree || '',
-    fieldOfStudy: e.field || '',
-    startDate: e.startDate || '',
-    endDate: e.endDate || '',
-    grade: '',
-    description: '',
-  }))
-
-  const projects = (d.projects || []).map((p, i) => ({
-    id: `proj-${Date.now()}-${i}`,
-    name: p.name || '',
-    role: '',
-    startDate: '',
-    endDate: '',
-    description: p.description || '',
-    technologies: Array.isArray(p.technologies) ? p.technologies : [],
-    githubLink: p.github || '',
-    liveLink: p.live || '',
-  }))
-
-  const skills = {
-    technical: Array.isArray(d.skills) ? d.skills : [],
-    soft: [],
-    languages: Array.isArray(d.languages) ? d.languages : [],
-    certifications: Array.isArray(d.certifications) ? d.certifications : [],
-  }
-
-  return { personal, education, experience, projects, skills }
 }
 
-function normalizeHeuristicData(parsed) {
+function normalizeBackendData(apiData) {
+  const d = apiData || {}
+
   return {
     personal: {
-      fullName: parsed.personal?.fullName || '',
-      professionalTitle: parsed.personal?.professionalTitle || '',
-      email: parsed.personal?.email || '',
-      phone: parsed.personal?.phone || '',
-      location: parsed.personal?.location || '',
-      portfolio: parsed.personal?.portfolio || '',
-      linkedin: parsed.personal?.linkedin || '',
-      github: parsed.personal?.github || '',
-      professionalSummary: parsed.personal?.professionalSummary || '',
+      fullName: d.personal?.fullName || '',
+      professionalTitle: d.personal?.professionalTitle || '',
+      email: d.personal?.email || '',
+      phone: d.personal?.phone || '',
+      location: d.personal?.location || '',
+      portfolio: d.personal?.portfolio || '',
+      linkedin: d.personal?.linkedin || '',
+      github: d.personal?.github || '',
+      professionalSummary: d.summary || '',
     },
-    education: (parsed.education || []).map((e) => ({
-      id: e.id || `edu-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    education: addIds(d.education, 'edu').map((e) => ({
       institution: e.institution || '',
       degree: e.degree || '',
       fieldOfStudy: e.fieldOfStudy || '',
@@ -82,52 +33,58 @@ function normalizeHeuristicData(parsed) {
       endDate: e.endDate || '',
       grade: e.grade || '',
       description: e.description || '',
+      ...e,
     })),
-    experience: (parsed.experience || []).map((e) => ({
-      id: e.id || `exp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    experience: addIds(d.experience, 'exp').map((e) => ({
       jobTitle: e.jobTitle || '',
       company: e.company || '',
       startDate: e.startDate || '',
       endDate: e.endDate || '',
-      currentlyWorking: e.currentlyWorking || false,
+      currentlyWorking: e.currentlyWorking || /present|current|now/i.test(e.endDate || ''),
       description: e.description || '',
       achievements: e.achievements || '',
+      ...e,
     })),
-    projects: (parsed.projects || []).map((p) => ({
-      id: p.id || `proj-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    projects: addIds(d.projects, 'proj').map((p) => ({
       name: p.name || '',
       role: p.role || '',
       startDate: p.startDate || '',
       endDate: p.endDate || '',
       description: p.description || '',
-      technologies: p.technologies || [],
+      technologies: Array.isArray(p.technologies) ? p.technologies : [],
       githubLink: p.githubLink || '',
       liveLink: p.liveLink || '',
+      ...p,
     })),
     skills: {
-      technical: parsed.skills?.technical || [],
-      soft: parsed.skills?.soft || [],
-      languages: parsed.skills?.languages || [],
-      certifications: parsed.skills?.certifications || [],
+      technical: Array.isArray(d.skills?.technical) ? d.skills.technical : [],
+      soft: Array.isArray(d.skills?.soft) ? d.skills.soft : [],
+      languages: Array.isArray(d.skills?.languages) ? d.skills.languages : [],
+      certifications: (d.certifications || []).map((c) => c.name || ''),
     },
+    certifications: addIds(d.certifications, 'cert').map((c) => ({
+      name: c.name || '',
+      issuer: c.issuer || '',
+      date: c.date || '',
+      url: c.url || '',
+      ...c,
+    })),
   }
 }
 
 export async function parseResume(file) {
-  const text = await extractText(file)
+  // Step 1 — upload file and get extracted text.
+  const uploadResult = await uploadResume(file)
+  const text = uploadResult.data?.text
 
-  const config = getAIConfig()
-
-  if (config && config.provider !== 'local' && config.apiKey) {
-    try {
-      const aiData = await aiParse(text, config.provider, config.apiKey)
-      return normalizeAIData(aiData)
-    } catch (aiErr) {
-      console.warn('AI parsing failed, falling back to heuristic:', aiErr.message)
-    }
+  if (!text) {
+    throw new Error('No text could be extracted from the file.')
   }
 
-  const { default: heuristicParse } = await import('./heuristicParser')
-  const parsed = heuristicParse(text)
-  return normalizeHeuristicData(parsed)
+  // Step 2 — send text to AI parser and get structured JSON.
+  const parseResult = await parseResumeText(text)
+  const parsed = parseResult.data
+
+  // Step 3 — normalise to match ResumeContext shape.
+  return normalizeBackendData(parsed)
 }

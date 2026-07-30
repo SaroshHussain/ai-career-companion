@@ -16,7 +16,7 @@ function formatText(text) {
 }
 
 const ResumePreview = forwardRef(function ResumePreview({ data }, ref) {
-  const { personal, education, experience, projects, skills } = data
+  const { personal, education, experience, projects, skills, certifications } = data
 
   const formatDate = (value) => {
     if (!value) return ''
@@ -40,7 +40,8 @@ const ResumePreview = forwardRef(function ResumePreview({ data }, ref) {
     (skills.technical && skills.technical.length > 0) ||
     (skills.soft && skills.soft.length > 0) ||
     (skills.languages && skills.languages.length > 0) ||
-    (skills.certifications && skills.certifications.length > 0)
+    (skills.certifications && skills.certifications.length > 0) ||
+    (certifications && certifications.length > 0)
 
   if (!hasAnyContent) {
     return (
@@ -296,6 +297,30 @@ const ResumePreview = forwardRef(function ResumePreview({ data }, ref) {
           </div>
         )}
       </div>
+
+      {/* Certifications (top-level) */}
+      {certifications && certifications.length > 0 && (
+        <div className="mt-4">
+          <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+            Certifications
+          </h2>
+          <div className="flex flex-col gap-2">
+            {certifications.map((cert) => (
+              <div key={cert.id}>
+                <p className="text-xs font-semibold text-on-surface">{cert.name}</p>
+                {(cert.issuer || cert.date) && (
+                  <p className="text-[11px] text-on-surface-variant">
+                    {cert.issuer}{cert.issuer && cert.date ? ' — ' : ''}{cert.date ? formatDate(cert.date) : ''}
+                  </p>
+                )}
+                {cert.url && (
+                  <p className="text-[11px] text-primary truncate">{cert.url}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 })

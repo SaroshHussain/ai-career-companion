@@ -45,6 +45,14 @@ function App() {
               }
             />
             <Route
+              path="/dashboard/resume/new"
+              element={
+                <ProtectedRoute>
+                  <ResumeEditor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/resume/edit"
               element={
                 <ProtectedRoute>

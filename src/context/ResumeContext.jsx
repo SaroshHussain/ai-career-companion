@@ -23,6 +23,7 @@ const emptyResume = {
     languages: [],
     certifications: [],
   },
+  certifications: [],
 }
 
 export function ResumeProvider({ children }) {
@@ -31,7 +32,20 @@ export function ResumeProvider({ children }) {
   const [mode, setMode] = useState('new')
 
   const loadParsedResume = useCallback((parsedData, file) => {
-    setResumeData(parsedData)
+    const d = {
+      ...emptyResume,
+      ...parsedData,
+      personal: { ...emptyResume.personal, ...(parsedData.personal || {}) },
+      skills: { ...emptyResume.skills, ...(parsedData.skills || {}) },
+      certifications: parsedData.certifications || parsedData.skills?.certifications?.map((c, i) => ({
+        id: `cert-${Date.now()}-${i}`,
+        name: c,
+        issuer: '',
+        date: '',
+        url: '',
+      })) || [],
+    }
+    setResumeData(d)
     setUploadedFile(file)
     setMode('upload')
   }, [])
@@ -42,10 +56,21 @@ export function ResumeProvider({ children }) {
     setMode('new')
   }, [])
 
+  const loadResume = useCallback((data) => {
+    setResumeData(data)
+  }, [])
+
   const updatePersonal = useCallback((field, value) => {
     setResumeData((prev) => ({
       ...prev,
       personal: { ...prev.personal, [field]: value },
+    }))
+  }, [])
+
+  const updateSummary = useCallback((value) => {
+    setResumeData((prev) => ({
+      ...prev,
+      personal: { ...prev.personal, professionalSummary: value },
     }))
   }, [])
 
@@ -206,13 +231,41 @@ export function ResumeProvider({ children }) {
     }))
   }, [])
 
+  const addCertification = useCallback(() => {
+    setResumeData((prev) => ({
+      ...prev,
+      certifications: [
+        ...(prev.certifications || []),
+        { id: `cert-${Date.now()}`, name: '', issuer: '', date: '', url: '' },
+      ],
+    }))
+  }, [])
+
+  const updateCertification = useCallback((id, field, value) => {
+    setResumeData((prev) => ({
+      ...prev,
+      certifications: (prev.certifications || []).map((c) =>
+        c.id === id ? { ...c, [field]: value } : c,
+      ),
+    }))
+  }, [])
+
+  const removeCertification = useCallback((id) => {
+    setResumeData((prev) => ({
+      ...prev,
+      certifications: (prev.certifications || []).filter((c) => c.id !== id),
+    }))
+  }, [])
+
   const value = {
     resumeData,
     uploadedFile,
     mode,
     loadParsedResume,
     resetToNew,
+    loadResume,
     updatePersonal,
+    updateSummary,
     addEducation,
     updateEducation,
     removeEducation,
@@ -227,6 +280,9 @@ export function ResumeProvider({ children }) {
     addSkillItem,
     removeSkillItem,
     updateSkillItem,
+    addCertification,
+    updateCertification,
+    removeCertification,
   }
 
   return <ResumeContext.Provider value={value}>{children}</ResumeContext.Provider>
