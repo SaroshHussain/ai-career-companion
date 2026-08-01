@@ -4,6 +4,10 @@ export const defaultResume = {
     professionalTitle: '',
     email: '',
     phone: '',
+    address: '',
+    city: '',
+    state: '',
+    country: '',
     location: '',
     portfolio: '',
     linkedin: '',
@@ -16,9 +20,19 @@ export const defaultResume = {
   skills: {
     technical: [],
     soft: [],
+    tools: [],
+    frameworks: [],
     languages: [],
+    databases: [],
+    cloud: [],
     certifications: [],
   },
+  certifications: [],
+  awards: [],
+  publications: [],
+  volunteer: [],
+  interests: [],
+  references: [],
 }
 
 export const placeholderResume = {

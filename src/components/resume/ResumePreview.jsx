@@ -16,7 +16,7 @@ function formatText(text) {
 }
 
 const ResumePreview = forwardRef(function ResumePreview({ data }, ref) {
-  const { personal, education, experience, projects, skills, certifications } = data
+  const { personal, education, experience, projects, skills, certifications, awards, publications, volunteer, interests, references } = data
 
   const formatDate = (value) => {
     if (!value) return ''
@@ -40,8 +40,17 @@ const ResumePreview = forwardRef(function ResumePreview({ data }, ref) {
     (skills.technical && skills.technical.length > 0) ||
     (skills.soft && skills.soft.length > 0) ||
     (skills.languages && skills.languages.length > 0) ||
+    (skills.tools && skills.tools.length > 0) ||
+    (skills.frameworks && skills.frameworks.length > 0) ||
+    (skills.databases && skills.databases.length > 0) ||
+    (skills.cloud && skills.cloud.length > 0) ||
     (skills.certifications && skills.certifications.length > 0) ||
-    (certifications && certifications.length > 0)
+    (certifications && certifications.length > 0) ||
+    (awards && awards.length > 0) ||
+    (publications && publications.length > 0) ||
+    (volunteer && volunteer.length > 0) ||
+    (interests && interests.length > 0) ||
+    (references && references.length > 0)
 
   if (!hasAnyContent) {
     return (
@@ -282,6 +291,62 @@ const ResumePreview = forwardRef(function ResumePreview({ data }, ref) {
             </div>
           </div>
         )}
+        {skills.frameworks && skills.frameworks.length > 0 && (
+          <div className="mb-3">
+            <h2 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+              Frameworks
+            </h2>
+            <div className="flex flex-wrap gap-1.5">
+              {skills.frameworks.map((s, i) => (
+                <span key={i} className="rounded-sm bg-surface-container-low px-2 py-0.5 text-[11px] text-on-surface">
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        {skills.tools && skills.tools.length > 0 && (
+          <div className="mb-3">
+            <h2 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+              Tools
+            </h2>
+            <div className="flex flex-wrap gap-1.5">
+              {skills.tools.map((s, i) => (
+                <span key={i} className="rounded-sm bg-surface-container-low px-2 py-0.5 text-[11px] text-on-surface">
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        {skills.databases && skills.databases.length > 0 && (
+          <div className="mb-3">
+            <h2 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+              Databases
+            </h2>
+            <div className="flex flex-wrap gap-1.5">
+              {skills.databases.map((s, i) => (
+                <span key={i} className="rounded-sm bg-surface-container-low px-2 py-0.5 text-[11px] text-on-surface">
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        {skills.cloud && skills.cloud.length > 0 && (
+          <div className="mb-3">
+            <h2 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+              Cloud
+            </h2>
+            <div className="flex flex-wrap gap-1.5">
+              {skills.cloud.map((s, i) => (
+                <span key={i} className="rounded-sm bg-surface-container-low px-2 py-0.5 text-[11px] text-on-surface">
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         {skills.certifications && skills.certifications.length > 0 && (
           <div className="mb-3">
             <h2 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
@@ -315,6 +380,126 @@ const ResumePreview = forwardRef(function ResumePreview({ data }, ref) {
                 )}
                 {cert.url && (
                   <p className="text-[11px] text-primary truncate">{cert.url}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Awards */}
+      {awards && awards.length > 0 && (
+        <div className="mt-4">
+          <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+            Awards
+          </h2>
+          <div className="flex flex-col gap-2">
+            {awards.map((a) => (
+              <div key={a.id}>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-semibold text-on-surface">{a.title}</p>
+                  {a.date && <p className="shrink-0 text-[11px] text-on-surface-variant">{formatDate(a.date)}</p>}
+                </div>
+                {a.issuer && <p className="text-[11px] text-primary">{a.issuer}</p>}
+                {a.description && (
+                  <p className="text-[11px] leading-relaxed text-on-surface-variant">{a.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Publications */}
+      {publications && publications.length > 0 && (
+        <div className="mt-4">
+          <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+            Publications
+          </h2>
+          <div className="flex flex-col gap-2">
+            {publications.map((p) => (
+              <div key={p.id}>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-semibold text-on-surface">{p.title}</p>
+                  {p.date && <p className="shrink-0 text-[11px] text-on-surface-variant">{formatDate(p.date)}</p>}
+                </div>
+                {p.publisher && <p className="text-[11px] text-primary">{p.publisher}</p>}
+                {p.description && (
+                  <p className="text-[11px] leading-relaxed text-on-surface-variant">{p.description}</p>
+                )}
+                {p.url && <p className="text-[11px] text-primary truncate">{p.url}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Volunteer */}
+      {volunteer && volunteer.length > 0 && (
+        <div className="mt-4">
+          <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+            Volunteer Experience
+          </h2>
+          <div className="flex flex-col gap-2">
+            {volunteer.map((v) => (
+              <div key={v.id}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-on-surface">{v.role}</p>
+                    {v.organization && <p className="text-xs text-primary">{v.organization}</p>}
+                  </div>
+                  {(v.startDate || v.endDate || v.currentlyActive) && (
+                    <p className="shrink-0 text-[11px] text-on-surface-variant">
+                      {v.startDate ? formatDate(v.startDate) : ''}
+                      {(v.startDate || v.endDate) ? ' – ' : ''}
+                      {v.currentlyActive ? 'Present' : v.endDate ? formatDate(v.endDate) : ''}
+                    </p>
+                  )}
+                </div>
+                {v.description && (
+                  <p className="text-[11px] leading-relaxed text-on-surface-variant">{v.description}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Interests */}
+      {interests && interests.length > 0 && (
+        <div className="mt-4">
+          <h2 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+            Interests
+          </h2>
+          <div className="flex flex-wrap gap-1.5">
+            {interests.map((item, i) => (
+              <span key={i} className="rounded-sm bg-surface-container-low px-2 py-0.5 text-[11px] text-on-surface">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* References */}
+      {references && references.length > 0 && (
+        <div className="mt-4">
+          <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
+            References
+          </h2>
+          <div className="flex flex-col gap-2">
+            {references.map((r) => (
+              <div key={r.id}>
+                <p className="text-xs font-semibold text-on-surface">{r.name}</p>
+                {(r.jobTitle || r.company) && (
+                  <p className="text-[11px] text-on-surface-variant">
+                    {r.jobTitle}{r.jobTitle && r.company ? ' — ' : ''}{r.company}
+                  </p>
+                )}
+                {(r.email || r.phone) && (
+                  <p className="text-[11px] text-on-surface-variant">
+                    {r.email}{r.email && r.phone ? ' | ' : ''}{r.phone}
+                  </p>
                 )}
               </div>
             ))}

@@ -4,6 +4,7 @@ import {
   ChevronDown, Plus, Sparkles, User, BookOpen, Briefcase,
   GraduationCap, Wrench, FolderGit2, Award, Trash2, ArrowLeft,
   Download, X, Loader2, Eye, Edit3, AlertTriangle, RotateCcw,
+  HandHeart, Users, Heart, Newspaper, Trophy,
 } from 'lucide-react'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
@@ -138,6 +139,11 @@ function ResumeEditor() {
     addSkillItem, removeSkillItem,
     addProject, updateProject, removeProject, addProjectTechnology, removeProjectTechnology,
     addCertification, updateCertification, removeCertification,
+    addAward, updateAward, removeAward,
+    addPublication, updatePublication, removePublication,
+    addVolunteer, updateVolunteer, removeVolunteer,
+    addReference, updateReference, removeReference,
+    addInterest, removeInterest,
     loadResume,
     resetToNew,
   } = useResume()
@@ -442,6 +448,14 @@ function ResumeEditor() {
                   </div>
                   {renderField('Location', resumeData.personal.location, setPersonal('location'), { placeholder: 'Rawalpindi, Pakistan', aiField: 'location' })}
                   <div className="grid grid-cols-2 gap-2.5">
+                    {renderField('City', resumeData.personal.city, setPersonal('city'), { placeholder: 'Rawalpindi' })}
+                    {renderField('State', resumeData.personal.state, setPersonal('state'), { placeholder: 'Punjab' })}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {renderField('Country', resumeData.personal.country, setPersonal('country'), { placeholder: 'Pakistan' })}
+                    {renderField('Address', resumeData.personal.address, setPersonal('address'), { placeholder: 'Street address' })}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
                     {renderField('Portfolio', resumeData.personal.portfolio, setPersonal('portfolio'), { placeholder: 'https://yourportfolio.com', aiField: 'portfolio' })}
                     {renderField('LinkedIn', resumeData.personal.linkedin, setPersonal('linkedin'), { placeholder: 'https://linkedin.com/in/yourname', aiField: 'linkedin' })}
                   </div>
@@ -488,6 +502,10 @@ function ResumeEditor() {
                             {renderField('Company', exp.company, (e) => updateExperience(exp.id, 'company', e.target.value), { placeholder: 'Acme Corp' })}
                           </div>
                           <div className="grid grid-cols-2 gap-2">
+                            {renderField('Employment Type', exp.employmentType, (e) => updateExperience(exp.id, 'employmentType', e.target.value), { placeholder: 'Full-time' })}
+                            {renderField('Location', exp.location, (e) => updateExperience(exp.id, 'location', e.target.value), { placeholder: 'Remote / City, Country' })}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
                             {renderField('Start', exp.startDate, (e) => updateExperience(exp.id, 'startDate', e.target.value), { type: 'month' })}
                             {renderField('End', exp.endDate, (e) => updateExperience(exp.id, 'endDate', e.target.value), { type: 'month' })}
                           </div>
@@ -511,6 +529,10 @@ function ResumeEditor() {
                             >
                               <Sparkles className="h-3.5 w-3.5" />
                             </button>
+                          </div>
+                          <div>
+                            <p className="mb-1 text-label-sm text-on-surface-variant">Technologies Used</p>
+                            <TagInput tags={exp.technologiesUsed || []} onAdd={(tech) => updateExperience(exp.id, 'technologiesUsed', [...(exp.technologiesUsed || []), tech])} onRemove={(i) => updateExperience(exp.id, 'technologiesUsed', (exp.technologiesUsed || []).filter((_, idx) => idx !== i))} placeholder="React, Node.js..." />
                           </div>
                         </>,
                         removeExperience,
@@ -556,7 +578,27 @@ function ResumeEditor() {
                 <div className="space-y-3">
                   <div>
                     <p className="mb-1 text-label-sm text-on-surface-variant">Technical</p>
-                    <TagInput tags={resumeData.skills.technical} onAdd={(item) => addSkillItem('technical', item)} onRemove={(i) => removeSkillItem('technical', i)} placeholder="JavaScript, React, Python..." />
+                    <TagInput tags={resumeData.skills.technical} onAdd={(item) => addSkillItem('technical', item)} onRemove={(i) => removeSkillItem('technical', i)} placeholder="JavaScript, Python..." />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="mb-1 text-label-sm text-on-surface-variant">Frameworks</p>
+                      <TagInput tags={resumeData.skills.frameworks} onAdd={(item) => addSkillItem('frameworks', item)} onRemove={(i) => removeSkillItem('frameworks', i)} placeholder="React, Django..." />
+                    </div>
+                    <div>
+                      <p className="mb-1 text-label-sm text-on-surface-variant">Tools</p>
+                      <TagInput tags={resumeData.skills.tools} onAdd={(item) => addSkillItem('tools', item)} onRemove={(i) => removeSkillItem('tools', i)} placeholder="Git, Figma..." />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="mb-1 text-label-sm text-on-surface-variant">Databases</p>
+                      <TagInput tags={resumeData.skills.databases} onAdd={(item) => addSkillItem('databases', item)} onRemove={(i) => removeSkillItem('databases', i)} placeholder="PostgreSQL, MongoDB..." />
+                    </div>
+                    <div>
+                      <p className="mb-1 text-label-sm text-on-surface-variant">Cloud</p>
+                      <TagInput tags={resumeData.skills.cloud} onAdd={(item) => addSkillItem('cloud', item)} onRemove={(i) => removeSkillItem('cloud', i)} placeholder="AWS, GCP..." />
+                    </div>
                   </div>
                   <div>
                     <p className="mb-1 text-label-sm text-on-surface-variant">Soft Skills</p>
@@ -628,6 +670,118 @@ function ResumeEditor() {
                     )}
                   </div>
                 )}
+              </Section>
+
+              <Section title="Awards" icon={Trophy} onAdd={addAward}>
+                {(!resumeData.awards || resumeData.awards.length === 0) ? (
+                  <EmptySection label="No awards yet. Click + to add." />
+                ) : (
+                  <div className="space-y-2.5">
+                    {resumeData.awards.map((award) =>
+                      renderEntryCard(
+                        award,
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            {renderField('Title', award.title, (e) => updateAward(award.id, 'title', e.target.value), { placeholder: 'Employee of the Year' })}
+                            {renderField('Issuer', award.issuer, (e) => updateAward(award.id, 'issuer', e.target.value), { placeholder: 'Acme Corp' })}
+                          </div>
+                          {renderField('Date', award.date, (e) => updateAward(award.id, 'date', e.target.value), { type: 'month' })}
+                          {renderField('Description', award.description, (e) => updateAward(award.id, 'description', e.target.value), { textarea: true, rows: 2, placeholder: 'What the award recognizes...' })}
+                        </>,
+                        removeAward,
+                        award.title || 'New award',
+                      )
+                    )}
+                  </div>
+                )}
+              </Section>
+
+              <Section title="Publications" icon={Newspaper} onAdd={addPublication}>
+                {(!resumeData.publications || resumeData.publications.length === 0) ? (
+                  <EmptySection label="No publications yet. Click + to add." />
+                ) : (
+                  <div className="space-y-2.5">
+                    {resumeData.publications.map((pub) =>
+                      renderEntryCard(
+                        pub,
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            {renderField('Title', pub.title, (e) => updatePublication(pub.id, 'title', e.target.value), { placeholder: 'Paper or article title' })}
+                            {renderField('Publisher', pub.publisher, (e) => updatePublication(pub.id, 'publisher', e.target.value), { placeholder: 'Journal / Conference' })}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {renderField('Date', pub.date, (e) => updatePublication(pub.id, 'date', e.target.value), { type: 'month' })}
+                            {renderField('URL', pub.url, (e) => updatePublication(pub.id, 'url', e.target.value), { placeholder: 'https://doi.org/...' })}
+                          </div>
+                          {renderField('Description', pub.description, (e) => updatePublication(pub.id, 'description', e.target.value), { textarea: true, rows: 2, placeholder: 'Abstract or notes...' })}
+                        </>,
+                        removePublication,
+                        pub.title || 'New publication',
+                      )
+                    )}
+                  </div>
+                )}
+              </Section>
+
+              <Section title="Volunteer Experience" icon={HandHeart} onAdd={addVolunteer}>
+                {(!resumeData.volunteer || resumeData.volunteer.length === 0) ? (
+                  <EmptySection label="No volunteer experience yet. Click + to add." />
+                ) : (
+                  <div className="space-y-2.5">
+                    {resumeData.volunteer.map((vol) =>
+                      renderEntryCard(
+                        vol,
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            {renderField('Role', vol.role, (e) => updateVolunteer(vol.id, 'role', e.target.value), { placeholder: 'Volunteer Coordinator' })}
+                            {renderField('Organization', vol.organization, (e) => updateVolunteer(vol.id, 'organization', e.target.value), { placeholder: 'Red Cross' })}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {renderField('Start', vol.startDate, (e) => updateVolunteer(vol.id, 'startDate', e.target.value), { type: 'month' })}
+                            {renderField('End', vol.endDate, (e) => updateVolunteer(vol.id, 'endDate', e.target.value), { type: 'month' })}
+                          </div>
+                          {renderField('Description', vol.description, (e) => updateVolunteer(vol.id, 'description', e.target.value), { textarea: true, rows: 2, placeholder: 'What you contributed...' })}
+                        </>,
+                        removeVolunteer,
+                        [vol.role, vol.organization].filter(Boolean).join(' @ ') || 'New volunteer entry',
+                      )
+                    )}
+                  </div>
+                )}
+              </Section>
+
+              <Section title="References" icon={Users} onAdd={addReference}>
+                {(!resumeData.references || resumeData.references.length === 0) ? (
+                  <EmptySection label="No references yet. Click + to add." />
+                ) : (
+                  <div className="space-y-2.5">
+                    {resumeData.references.map((ref) =>
+                      renderEntryCard(
+                        ref,
+                        <>
+                          <div className="grid grid-cols-2 gap-2">
+                            {renderField('Name', ref.name, (e) => updateReference(ref.id, 'name', e.target.value), { placeholder: 'Jane Smith' })}
+                            {renderField('Job Title', ref.jobTitle, (e) => updateReference(ref.id, 'jobTitle', e.target.value), { placeholder: 'Engineering Manager' })}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {renderField('Company', ref.company, (e) => updateReference(ref.id, 'company', e.target.value), { placeholder: 'Acme Corp' })}
+                            {renderField('Phone', ref.phone, (e) => updateReference(ref.id, 'phone', e.target.value), { type: 'tel', placeholder: '+15551234567' })}
+                          </div>
+                          {renderField('Email', ref.email, (e) => updateReference(ref.id, 'email', e.target.value), { type: 'email', placeholder: 'jane@example.com' })}
+                        </>,
+                        removeReference,
+                        ref.name || 'New reference',
+                      )
+                    )}
+                  </div>
+                )}
+              </Section>
+
+              <Section title="Interests" icon={Heart}>
+                <div>
+                  <p className="mb-1 text-label-sm text-on-surface-variant">Interests & Hobbies</p>
+                  <TagInput tags={resumeData.interests || []} onAdd={(item) => addInterest(item)} onRemove={(i) => removeInterest(i)} placeholder="Chess, Photography, Hiking..." />
+                </div>
               </Section>
 
               <div className="h-4" />

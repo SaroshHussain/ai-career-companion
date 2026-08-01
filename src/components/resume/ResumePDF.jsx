@@ -307,41 +307,37 @@ function SkillsBlock({ skills }) {
   const technical = s.technical || []
   const languages = s.languages || []
   const certs = s.certifications || []
+  const frameworks = s.frameworks || []
+  const tools = s.tools || []
+  const databases = s.databases || []
+  const cloud = s.cloud || []
+  const soft = s.soft || []
 
-  if (technical.length === 0 && languages.length === 0 && certs.length === 0) return null
+  const groups = [
+    { label: 'Technical Skills', items: technical },
+    { label: 'Frameworks', items: frameworks },
+    { label: 'Tools', items: tools },
+    { label: 'Databases', items: databases },
+    { label: 'Cloud', items: cloud },
+    { label: 'Soft Skills', items: soft },
+    { label: 'Languages', items: languages },
+    { label: 'Certifications', items: certs },
+  ].filter((g) => g.items.length > 0)
+
+  if (groups.length === 0) return null
 
   return (
     <View style={styles.section}>
-      {technical.length > 0 && (
-        <View style={{ marginBottom: 6 }}>
-          <Text style={styles.sectionTitle}>Technical Skills</Text>
+      {groups.map((g) => (
+        <View key={g.label} style={{ marginBottom: 6 }}>
+          <Text style={styles.sectionTitle}>{g.label}</Text>
           <View style={styles.skillRow}>
-            {technical.map((skill, i) => (
-              <Text key={i} style={styles.chip}>{skill}</Text>
+            {g.items.map((skill, i) => (
+              <Text key={i} style={styles.chip}>{skill || ''}</Text>
             ))}
           </View>
         </View>
-      )}
-      {languages.length > 0 && (
-        <View style={{ marginBottom: 6 }}>
-          <Text style={styles.sectionTitle}>Languages</Text>
-          <View style={styles.skillRow}>
-            {languages.map((lang, i) => (
-              <Text key={i} style={styles.chip}>{lang}</Text>
-            ))}
-          </View>
-        </View>
-      )}
-      {certs.length > 0 && (
-        <View>
-          <Text style={styles.sectionTitle}>Certifications</Text>
-          <View style={styles.skillRow}>
-            {certs.map((cert, i) => (
-              <Text key={i} style={styles.chip}>{cert}</Text>
-            ))}
-          </View>
-        </View>
-      )}
+      ))}
     </View>
   )
 }
@@ -369,6 +365,115 @@ function CertificationsBlock({ certifications }) {
   )
 }
 
+function AwardsBlock({ awards }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Awards</Text>
+      {(awards || []).map((a) => (
+        <View key={a.id} style={styles.entry} wrap={false}>
+          <View style={styles.entryHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.entryTitle}>{a.title || ''}</Text>
+              {a.issuer ? <Text style={styles.entrySubtitle}>{a.issuer || ''}</Text> : null}
+            </View>
+            {a.date ? <Text style={styles.entryDate}>{formatDate(a.date) || ''}</Text> : null}
+          </View>
+          {a.description ? <BulletBlock text={a.description} /> : null}
+        </View>
+      ))}
+    </View>
+  )
+}
+
+function PublicationsBlock({ publications }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Publications</Text>
+      {(publications || []).map((p) => (
+        <View key={p.id} style={styles.entry} wrap={false}>
+          <View style={styles.entryHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.entryTitle}>{p.title || ''}</Text>
+              {p.publisher ? <Text style={styles.entrySubtitle}>{p.publisher || ''}</Text> : null}
+            </View>
+            {p.date ? <Text style={styles.entryDate}>{formatDate(p.date) || ''}</Text> : null}
+          </View>
+          {p.description ? <BulletBlock text={p.description} /> : null}
+          {p.url ? (
+            <Link src={p.url || ''} style={[styles.linkText, { marginTop: 1 }]}>
+              {p.url || ''}
+            </Link>
+          ) : null}
+        </View>
+      ))}
+    </View>
+  )
+}
+
+function VolunteerBlock({ volunteer }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Volunteer Experience</Text>
+      {(volunteer || []).map((v) => (
+        <View key={v.id} style={styles.entry} wrap={false}>
+          <View style={styles.entryHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.entryTitle}>{v.role || ''}</Text>
+              {v.organization ? <Text style={styles.entrySubtitle}>{v.organization || ''}</Text> : null}
+            </View>
+            {(v.startDate || v.endDate || v.currentlyActive) ? (
+              <Text style={styles.entryDate}>
+                {v.startDate ? formatDate(v.startDate) : ''}
+                {(v.startDate || v.endDate) ? ' – ' : ''}
+                {v.currentlyActive ? 'Present' : v.endDate ? formatDate(v.endDate) : ''}
+              </Text>
+            ) : null}
+          </View>
+          {v.description ? <BulletBlock text={v.description} /> : null}
+        </View>
+      ))}
+    </View>
+  )
+}
+
+function ReferencesBlock({ references }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>References</Text>
+      {(references || []).map((r) => (
+        <View key={r.id} style={styles.entry} wrap={false}>
+          <Text style={styles.entryTitle}>{r.name || ''}</Text>
+          {(r.jobTitle || r.company) ? (
+            <Text style={[styles.entryDate, { marginTop: 1 }]}>
+              {r.jobTitle || ''}{r.jobTitle && r.company ? ' — ' : ''}{r.company || ''}
+            </Text>
+          ) : null}
+          {(r.email || r.phone) ? (
+            <Text style={[styles.entryDate, { marginTop: 1 }]}>
+              {r.email || ''}{r.email && r.phone ? ' | ' : ''}{r.phone || ''}
+            </Text>
+          ) : null}
+        </View>
+      ))}
+    </View>
+  )
+}
+
+function InterestsBlock({ interests }) {
+  const items = interests || []
+  if (items.length === 0) return null
+  return (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Interests</Text>
+      <View style={styles.skillRow}>
+        {items.map((item, i) => (
+          <Text key={i} style={styles.chip}>{item || ''}</Text>
+        ))}
+      </View>
+    </View>
+  )
+}
+
 export function ResumePDFDocument({ data }) {
   const safe = data || {}
   const personal = safe.personal || {}
@@ -377,6 +482,11 @@ export function ResumePDFDocument({ data }) {
   const projects = safe.projects || []
   const skills = safe.skills || {}
   const certifications = safe.certifications || []
+  const awards = safe.awards || []
+  const publications = safe.publications || []
+  const volunteer = safe.volunteer || []
+  const interests = safe.interests || []
+  const references = safe.references || []
 
   const hasHeader = !!(personal.fullName || personal.professionalTitle)
   const hasSummary = !!personal.professionalSummary
@@ -386,11 +496,21 @@ export function ResumePDFDocument({ data }) {
   const hasSkills = !!(skills.technical && skills.technical.length) ||
     !!(skills.soft && skills.soft.length) ||
     !!(skills.languages && skills.languages.length) ||
+    !!(skills.tools && skills.tools.length) ||
+    !!(skills.frameworks && skills.frameworks.length) ||
+    !!(skills.databases && skills.databases.length) ||
+    !!(skills.cloud && skills.cloud.length) ||
     !!(skills.certifications && skills.certifications.length)
   const hasCertifications = certifications.length > 0
+  const hasAwards = awards.length > 0
+  const hasPublications = publications.length > 0
+  const hasVolunteer = volunteer.length > 0
+  const hasInterests = interests.length > 0
+  const hasReferences = references.length > 0
 
   const hasAnyContent = hasHeader || hasSummary || hasExperience ||
-    hasEducation || hasProjects || hasSkills || hasCertifications
+    hasEducation || hasProjects || hasSkills || hasCertifications ||
+    hasAwards || hasPublications || hasVolunteer || hasInterests || hasReferences
 
   return (
     <Document>
@@ -404,6 +524,11 @@ export function ResumePDFDocument({ data }) {
             {hasEducation ? <EducationBlock education={education} /> : null}
             {hasSkills ? <SkillsBlock skills={skills} /> : null}
             {hasCertifications ? <CertificationsBlock certifications={certifications} /> : null}
+            {hasAwards ? <AwardsBlock awards={awards} /> : null}
+            {hasPublications ? <PublicationsBlock publications={publications} /> : null}
+            {hasVolunteer ? <VolunteerBlock volunteer={volunteer} /> : null}
+            {hasInterests ? <InterestsBlock interests={interests} /> : null}
+            {hasReferences ? <ReferencesBlock references={references} /> : null}
           </View>
         ) : (
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

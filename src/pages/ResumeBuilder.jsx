@@ -63,7 +63,7 @@ function UploadZone({ onFileSelected, disabled }) {
           <p className="mt-1 text-label-sm text-on-surface-variant">Drag & drop or click to browse</p>
         </div>
         <div className="flex gap-2">
-          {['PDF', 'DOC', 'DOCX'].map((format) => (
+          {['PDF', 'DOCX'].map((format) => (
             <span key={format} className="rounded-md bg-surface-container-low px-2 py-0.5 text-label-sm text-on-surface-variant">
               {format}
             </span>
@@ -73,7 +73,7 @@ function UploadZone({ onFileSelected, disabled }) {
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,.doc,.docx"
+        accept=".pdf,.docx"
         className="hidden"
         disabled={disabled}
         onChange={(event) => {
@@ -143,22 +143,15 @@ function ResumeBuilder() {
     setParsedFileInfo(null)
 
     try {
-      const parsed = await parseResume(file)
+      const parsed = await parseResume(file, (stage) => {
+        setStatus(stage === 'uploading' ? STATUS.UPLOADING : STATUS.PARSING)
+      })
 
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const fileInfo = {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          dataURL: event.target.result,
-        }
-        loadParsedResume(parsed, fileInfo)
-        setParsedFileInfo({ name: file.name, size: file.size })
-        setStatus(STATUS.SUCCESS)
-      }
-      reader.readAsDataURL(file)
+      loadParsedResume(parsed, { name: file.name, type: file.type, size: file.size })
+      setParsedFileInfo({ name: file.name, size: file.size })
+      setStatus(STATUS.SUCCESS)
     } catch (err) {
+      console.error('[ResumeBuilder] upload/parse failed', err)
       setError(err.message || 'Failed to parse resume. Please try again.')
       setStatus(STATUS.ERROR)
     }
