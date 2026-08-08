@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react'
+import { normalizeParsedResume } from '../services/resumeLoader'
 
 const ResumeContext = createContext(null)
 
@@ -59,24 +60,7 @@ export function ResumeProvider({ children }) {
   const [mode, setMode] = useState('new')
 
   const loadParsedResume = useCallback((parsedData, file) => {
-    const d = {
-      ...emptyResume,
-      ...parsedData,
-      personal: { ...emptyResume.personal, ...(parsedData.personal || {}) },
-      skills: {
-        ...emptyResume.skills,
-        ...(parsedData.skills || {}),
-        technical: dedupeStrings(parsedData.skills?.technical || parsedData.skills?.tools || []),
-      },
-      certifications: parsedData.certifications || parsedData.skills?.certifications?.map((c, i) => ({
-        id: `cert-${Date.now()}-${i}`,
-        name: c,
-        issuer: '',
-        date: '',
-        url: '',
-      })) || [],
-    }
-    setResumeData(d)
+    setResumeData(normalizeParsedResume(parsedData))
     setUploadedFile(file)
     setMode('upload')
   }, [])

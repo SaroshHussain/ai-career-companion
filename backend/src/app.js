@@ -9,6 +9,7 @@ import config from './config/index.js'
 import healthRoutes from './routes/health.js'
 import resumeRoutes from './routes/resume.js'
 import aiRoutes from './routes/ai.js'
+import jobsRoutes from './routes/jobs.js'
 import errorHandler from './middleware/errorHandler.js'
 
 const app = express()
@@ -34,6 +35,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use('/api', healthRoutes)
 app.use('/api/resume', resumeRoutes)
 app.use('/api', aiRoutes)
+app.use('/api', jobsRoutes)
 
 // ----- Error handling -----
 

@@ -14,10 +14,15 @@ export function downloadBlob(blob, filename) {
   const a = document.createElement('a')
   a.href = url
   a.download = filename
+  a.style.display = 'none'
   document.body.appendChild(a)
   a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
+  // Defer cleanup so the browser has time to begin the download before the
+  // object URL is revoked (revoking synchronously can abort the download).
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 1000)
 }
 
 export function getPDFFilename(personal) {

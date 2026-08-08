@@ -9,7 +9,28 @@ import { MdDescription } from 'react-icons/md'
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import ResumeOptionCard from '../components/resume/ResumeOptionCard'
 import { useResume } from '../context/ResumeContext'
+import { useJobSearch } from '../context/JobSearchContext'
 import { parseResume } from '../services/resumeParser'
+
+// Pulls the user's job-search defaults from a parsed resume: the headline
+// professional title and the city they live in. Falls back to the first
+// experience entry's job title and to a city extracted from the location.
+function extractJobSearchDefaults(parsed) {
+  const personal = parsed?.personal || {}
+
+  const keyword =
+    personal.professionalTitle?.trim() ||
+    parsed?.experience?.[0]?.jobTitle?.trim() ||
+    ''
+
+  const city =
+    personal.city?.trim() ||
+    personal.location?.trim()?.split(',')[0]?.trim() ||
+    personal.address?.trim() ||
+    ''
+
+  return { keyword, region: city }
+}
 
 function UploadZone({ onFileSelected, disabled }) {
   const [isDragging, setIsDragging] = useState(false)
@@ -128,6 +149,7 @@ const STATUS = { IDLE: 'idle', UPLOADING: 'uploading', PARSING: 'parsing', SUCCE
 function ResumeBuilder() {
   const navigate = useNavigate()
   const { loadParsedResume, resetToNew } = useResume()
+  const { updatePreferences } = useJobSearch()
   const [status, setStatus] = useState(STATUS.IDLE)
   const [error, setError] = useState(null)
   const [parsedFileInfo, setParsedFileInfo] = useState(null)
@@ -148,6 +170,7 @@ function ResumeBuilder() {
       })
 
       loadParsedResume(parsed, { name: file.name, type: file.type, size: file.size })
+      updatePreferences(extractJobSearchDefaults(parsed))
       setParsedFileInfo({ name: file.name, size: file.size })
       setStatus(STATUS.SUCCESS)
     } catch (err) {
@@ -182,7 +205,7 @@ function ResumeBuilder() {
         {status === STATUS.UPLOADING && (
           <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
             <HiOutlineArrowPath className="animate-spin text-lg text-primary" aria-hidden />
-            <p className="text-body-sm text-primary">Uploading your resume...</p>
+            <p className="text-body-sm text-primary">Reading your resume...</p>
           </div>
         )}
 
@@ -190,7 +213,7 @@ function ResumeBuilder() {
         {status === STATUS.PARSING && (
           <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
             <HiOutlineArrowPath className="animate-spin text-lg text-primary" aria-hidden />
-            <p className="text-body-sm text-primary">Parsing resume with AI...</p>
+            <p className="text-body-sm text-primary">Parsing resume content...</p>
           </div>
         )}
 

@@ -27,7 +27,7 @@ const emptyFeatures = [
     description: 'No job searches yet.',
     action: 'Find Jobs',
     icon: HiOutlineBriefcase,
-    href: '#',
+    href: '/dashboard/jobs',
     color: 'text-secondary bg-secondary/10',
   },
   {

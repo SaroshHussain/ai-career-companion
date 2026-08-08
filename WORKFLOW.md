@@ -232,6 +232,46 @@ The AI is given a strict system prompt instructing it to return ONLY valid JSON 
 
 ---
 
+## Job Finder Workflow
+
+### Flow:
+
+```
+Dashboard → "Job Finder" card → /dashboard/jobs
+        ↓
+Search form (keywords + region)
+        ↓
+GET /api/jobs?keywords=...&region=...&page=1&resultsPerPage=20
+        ↓
+Backend → POST https://jooble.org/api/{JOOBLE_API_KEY}
+        ↓
+Card grid (title, company, location, type, salary, snippet, source, updated)
+        ↓
+Click card → /dashboard/jobs/:jobId (job detail page)
+```
+
+### Backend:
+
+- **`services/jooble.js`** — Calls the Jooble REST API with `fetch`. API key comes from `JOOBLE_API_KEY` env var and is passed in the URL path (`https://jooble.org/api/{key}`).
+- **Region param**: The Jooble public docs describe a `location` parameter, but the actual API accepts a region field (`rgns`) — this is verified working and always used.
+- **`controllers/jobsController.js`** — `GET /api/jobs` validates keywords, delegates to the Jooble service, and returns `{ totalCount, page, resultsPerPage, jobs }`. Individual jobs from recent searches are kept in a bounded in-memory cache.
+- **`GET /api/jobs/:id`** — Jooble has no per-job detail endpoint, so this reads from the in-memory cache of recent search results. Returns 404 if the job is no longer cached (deep links after a server restart need a fresh search).
+
+### Frontend:
+
+- **`pages/JobFinder.jsx`** — Search form (keywords + region), responsive card grid, pagination, empty state, and error state. Search params sync to the URL query string so results survive refresh.
+- **`pages/JobDetailPage.jsx`** — Shows title, company, location, type, salary, source, updated date, description snippet, and an "Apply on Jooble" link. Accepts the job via router state for instant render, falling back to `GET /api/jobs/:id`.
+- **`components/jobs/JobCard.jsx`** — Reusable card for a single search result.
+- **`services/api.js`** — `searchJobs()` and `getJob()` helpers.
+
+### Notes:
+
+- Results are snippets/truncated excerpts from Jooble — there is no full description in the API response.
+- Salary is free-text when present and may be empty.
+- 403 from Jooble means an invalid API key; 404 means the endpoint is unavailable.
+
+---
+
 ## Settings Workflow
 
 ### Page structure:

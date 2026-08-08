@@ -4,7 +4,7 @@ import {
   ChevronDown, Plus, Sparkles, User, BookOpen, Briefcase,
   GraduationCap, Wrench, FolderGit2, Award, Trash2, ArrowLeft,
   Download, X, Loader2, Eye, Edit3, AlertTriangle, RotateCcw,
-  HandHeart, Users, Heart, Newspaper, Trophy,
+  HandHeart, Users, Heart, Trophy,
 } from 'lucide-react'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
@@ -15,6 +15,7 @@ import { useResume } from '../context/ResumeContext'
 import { generateResumePDF, downloadBlob, getPDFFilename } from '../services/pdfExport'
 import { isResumeEmpty } from '../services/resumeValidation'
 import { generateSummary as apiGenerateSummary } from '../services/api'
+import { placeholderResume } from '../data/defaultResume'
 
 const A4_WIDTH = 595
 const A4_HEIGHT = 842
@@ -81,7 +82,7 @@ function TagInput({ tags, onAdd, onRemove, placeholder }) {
   }
   return (
     <div className="flex flex-wrap gap-1.5 rounded-lg border border-outline-variant/30 bg-white px-2.5 py-1.5 transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
-      {tags.map((tag, i) => (
+      {(tags || []).map((tag, i) => (
         <span key={i} className="inline-flex items-center gap-1 rounded-md bg-primary/5 px-2 py-0.5 text-label-sm text-on-surface">
           {tag}
           <button type="button" onClick={() => onRemove(i)} className="text-on-surface-variant hover:text-on-surface" aria-label={`Remove ${tag}`}>
@@ -128,8 +129,6 @@ function EmptySection({ label }) {
 function ResumeEditor() {
   const navigate = useNavigate()
   const location = useLocation()
-  const mode = location.pathname === '/dashboard/resume/new' ? 'new' : (location.state?.mode || 'edit')
-
   const {
     resumeData,
     updatePersonal,
@@ -140,13 +139,15 @@ function ResumeEditor() {
     addProject, updateProject, removeProject, addProjectTechnology, removeProjectTechnology,
     addCertification, updateCertification, removeCertification,
     addAward, updateAward, removeAward,
-    addPublication, updatePublication, removePublication,
     addVolunteer, updateVolunteer, removeVolunteer,
     addReference, updateReference, removeReference,
     addInterest, removeInterest,
     loadResume,
     resetToNew,
+    mode: ctxMode,
   } = useResume()
+
+  const mode = location.state?.mode || ctxMode || (location.pathname === '/dashboard/resume/new' ? 'new' : 'edit')
 
   const [zoom, setZoom] = useState(0.7)
   const [toast, setToast] = useState(null)
@@ -240,6 +241,18 @@ function ResumeEditor() {
       localStorage.removeItem(AUTO_SAVE_KEY)
     }
   }, [mode, resetToNew])
+
+  useEffect(() => {
+    if (mode === 'new' && isResumeEmpty(resumeData)) {
+      loadResume(placeholderResume)
+    }
+  }, [mode, resumeData, loadResume])
+
+  useEffect(() => {
+    if (mode === 'new' && isResumeEmpty(resumeData)) {
+      loadResume(placeholderResume)
+    }
+  }, [mode, resumeData, loadResume])
 
   useEffect(() => {
     if (mode === 'edit' && loadResume) {
@@ -340,7 +353,7 @@ function ResumeEditor() {
   }
 
   const renderEntryCard = (entry, fields, onRemove, entryTitle) => (
-    <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low px-3.5 py-3 transition-shadow hover:shadow-sm">
+    <div key={entry.id} className="rounded-xl border border-outline-variant/15 bg-surface-container-low px-3.5 py-3 transition-shadow hover:shadow-sm">
       <div className="mb-2.5 flex items-center justify-between">
         <span className="text-label-sm font-medium text-on-surface truncate mr-2">{entryTitle || 'New entry'}</span>
         <button
@@ -447,18 +460,14 @@ function ResumeEditor() {
                     {renderField('Phone', resumeData.personal.phone, setPersonal('phone'), { type: 'tel', placeholder: '03XXXXXXXXX', aiField: 'phone' })}
                   </div>
                   {renderField('Location', resumeData.personal.location, setPersonal('location'), { placeholder: 'Rawalpindi, Pakistan', aiField: 'location' })}
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {renderField('City', resumeData.personal.city, setPersonal('city'), { placeholder: 'Rawalpindi' })}
-                    {renderField('State', resumeData.personal.state, setPersonal('state'), { placeholder: 'Punjab' })}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {renderField('Country', resumeData.personal.country, setPersonal('country'), { placeholder: 'Pakistan' })}
-                    {renderField('Address', resumeData.personal.address, setPersonal('address'), { placeholder: 'Street address' })}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {renderField('Portfolio', resumeData.personal.portfolio, setPersonal('portfolio'), { placeholder: 'https://yourportfolio.com', aiField: 'portfolio' })}
-                    {renderField('LinkedIn', resumeData.personal.linkedin, setPersonal('linkedin'), { placeholder: 'https://linkedin.com/in/yourname', aiField: 'linkedin' })}
-                  </div>
+                                  <div className="grid grid-cols-2 gap-2.5">
+                                    {renderField('State', resumeData.personal.state, setPersonal('state'), { placeholder: 'Punjab' })}
+                                    {renderField('Country', resumeData.personal.country, setPersonal('country'), { placeholder: 'Pakistan' })}
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2.5">
+                                    {renderField('Portfolio', resumeData.personal.portfolio, setPersonal('portfolio'), { placeholder: 'https://yourportfolio.com', aiField: 'portfolio' })}
+                                    {renderField('LinkedIn', resumeData.personal.linkedin, setPersonal('linkedin'), { placeholder: 'https://linkedin.com/in/yourname', aiField: 'linkedin' })}
+                                  </div>
                   {renderField('GitHub', resumeData.personal.github, setPersonal('github'), { placeholder: 'https://github.com/yourusername', aiField: 'github' })}
                 </div>
               </Section>
@@ -542,6 +551,7 @@ function ResumeEditor() {
                   </div>
                 )}
               </Section>
+              {/* Publications removed by request */}
 
               <Section title="Education" icon={GraduationCap} onAdd={addEducation}>
                 {resumeData.education.length === 0 ? (
@@ -696,32 +706,6 @@ function ResumeEditor() {
                 )}
               </Section>
 
-              <Section title="Publications" icon={Newspaper} onAdd={addPublication}>
-                {(!resumeData.publications || resumeData.publications.length === 0) ? (
-                  <EmptySection label="No publications yet. Click + to add." />
-                ) : (
-                  <div className="space-y-2.5">
-                    {resumeData.publications.map((pub) =>
-                      renderEntryCard(
-                        pub,
-                        <>
-                          <div className="grid grid-cols-2 gap-2">
-                            {renderField('Title', pub.title, (e) => updatePublication(pub.id, 'title', e.target.value), { placeholder: 'Paper or article title' })}
-                            {renderField('Publisher', pub.publisher, (e) => updatePublication(pub.id, 'publisher', e.target.value), { placeholder: 'Journal / Conference' })}
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {renderField('Date', pub.date, (e) => updatePublication(pub.id, 'date', e.target.value), { type: 'month' })}
-                            {renderField('URL', pub.url, (e) => updatePublication(pub.id, 'url', e.target.value), { placeholder: 'https://doi.org/...' })}
-                          </div>
-                          {renderField('Description', pub.description, (e) => updatePublication(pub.id, 'description', e.target.value), { textarea: true, rows: 2, placeholder: 'Abstract or notes...' })}
-                        </>,
-                        removePublication,
-                        pub.title || 'New publication',
-                      )
-                    )}
-                  </div>
-                )}
-              </Section>
 
               <Section title="Volunteer Experience" icon={HandHeart} onAdd={addVolunteer}>
                 {(!resumeData.volunteer || resumeData.volunteer.length === 0) ? (

@@ -1,187 +1,50 @@
-// Resume parser service — uploads a file to the backend, extracts text,
-// parses it with Gemini AI, and normalises the result for ResumeContext.
-// The normalizer maps every extracted field, removes duplicates, and
-// ensures the shape exactly matches what the Resume Builder expects.
+// Resume parser orchestrator.
+// Step 1 — extracts text from the uploaded file (PDF/DOCX) in the browser.
+// Step 2 — sends the extracted text to the backend (port 5000), which calls
+// the Gemini API, extracts all fields, and returns structured JSON in the
+// exact shape the resume editor's state expects. The backend response is
+// returned as-is; ResumeContext.loadParsedResume normalizes it further
+// (adds ids, maps summary -> professionalSummary, etc.).
 
-import { uploadResume, parseResumeText } from './api'
+import { extractText } from './fileExtractor'
+import { parseResumeText } from './api'
 
-function addIds(arr, prefix) {
-  return (arr || []).map((item, i) => ({
-    id: `${prefix}-${Date.now()}-${i}`,
-    ...item,
-  }))
-}
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+const ALLOWED_EXTENSIONS = ['.pdf', '.docx']
 
-function dedupeStrings(arr) {
-  const seen = new Set()
-  const out = []
-  for (const item of arr || []) {
-    if (typeof item !== 'string') continue
-    const trimmed = item.trim()
-    if (!trimmed) continue
-    const key = trimmed.toLowerCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    out.push(trimmed)
+function validateFile(file) {
+  if (!file) {
+    throw new Error('No file selected.')
   }
-  return out
-}
-
-function normalizeUrl(value) {
-  if (!value) return ''
-  const v = value.trim()
-  if (/^https?:\/\//i.test(v)) return v
-  // Bare domains and paths that are clearly URLs get a scheme.
-  if (/^[\w-]+\.(dev|com|io|net|org|me|github\.io|vercel\.app|netlify\.app)(\/|$)/i.test(v)) {
-    return `https://${v}`
+  const ext = `.${(file.name.split('.').pop() || '').toLowerCase()}`
+  if (!ALLOWED_EXTENSIONS.includes(ext) && file.type !== 'application/pdf') {
+    throw new Error('Invalid file format. Only PDF and DOCX files are allowed.')
   }
-  return v
-}
-
-function normalizePhone(value) {
-  if (!value) return ''
-  // Keep digits and leading +, drop spaces/dashes/parens.
-  const cleaned = value.replace(/[^\d+]/g, '')
-  if (cleaned.length < 7) return value.trim()
-  return cleaned
-}
-
-function normalizeBackendData(apiData) {
-  const d = apiData || {}
-
-  const personal = {
-    fullName: d.personal?.fullName || '',
-    professionalTitle: d.personal?.professionalTitle || '',
-    email: d.personal?.email || '',
-    phone: normalizePhone(d.personal?.phone),
-    address: d.personal?.address || '',
-    city: d.personal?.city || '',
-    state: d.personal?.state || '',
-    country: d.personal?.country || '',
-    location: d.personal?.location || '',
-    portfolio: normalizeUrl(d.personal?.portfolio),
-    linkedin: normalizeUrl(d.personal?.linkedin),
-    github: normalizeUrl(d.personal?.github),
-    professionalSummary: d.summary || '',
-  }
-
-  // Compose a location from granular address parts if none was given.
-  if (!personal.location) {
-    personal.location = [personal.city, personal.state, personal.country]
-      .filter(Boolean)
-      .join(', ')
-  }
-
-  return {
-    personal,
-    education: addIds(d.education, 'edu').map((e) => ({
-      institution: e.institution || '',
-      degree: e.degree || '',
-      fieldOfStudy: e.fieldOfStudy || '',
-      location: e.location || '',
-      startDate: e.startDate || '',
-      endDate: e.endDate || '',
-      grade: e.grade || '',
-      description: e.description || '',
-    })),
-    experience: addIds(d.experience, 'exp').map((e) => ({
-      jobTitle: e.jobTitle || '',
-      company: e.company || '',
-      employmentType: e.employmentType || '',
-      location: e.location || '',
-      startDate: e.startDate || '',
-      endDate: e.endDate || '',
-      currentlyWorking: e.currentlyWorking || /present|current|now/i.test(e.endDate || ''),
-      description: e.description || '',
-      achievements: e.achievements || '',
-      technologiesUsed: dedupeStrings(e.technologiesUsed),
-    })),
-    projects: addIds(d.projects, 'proj').map((p) => ({
-      name: p.name || '',
-      role: p.role || '',
-      startDate: p.startDate || '',
-      endDate: p.endDate || '',
-      description: p.description || '',
-      technologies: dedupeStrings(p.technologies),
-      githubLink: normalizeUrl(p.githubLink),
-      liveLink: normalizeUrl(p.liveLink),
-    })),
-    skills: {
-      technical: dedupeStrings(d.skills?.technical),
-      soft: dedupeStrings(d.skills?.soft),
-      tools: dedupeStrings(d.skills?.tools),
-      frameworks: dedupeStrings(d.skills?.frameworks),
-      languages: dedupeStrings(d.skills?.languages),
-      databases: dedupeStrings(d.skills?.databases),
-      cloud: dedupeStrings(d.skills?.cloud),
-    },
-    certifications: addIds(d.certifications, 'cert').map((c) => ({
-      name: c.name || '',
-      issuer: c.issuer || '',
-      date: c.date || '',
-      credentialId: c.credentialId || '',
-      url: normalizeUrl(c.url),
-    })),
-    awards: addIds(d.awards, 'award').map((a) => ({
-      title: a.title || '',
-      issuer: a.issuer || '',
-      date: a.date || '',
-      description: a.description || '',
-    })),
-    publications: addIds(d.publications, 'pub').map((p) => ({
-      title: p.title || '',
-      publisher: p.publisher || '',
-      date: p.date || '',
-      url: normalizeUrl(p.url),
-      description: p.description || '',
-    })),
-    volunteer: addIds(d.volunteer, 'vol').map((v) => ({
-      role: v.role || '',
-      organization: v.organization || '',
-      location: v.location || '',
-      startDate: v.startDate || '',
-      endDate: v.endDate || '',
-      currentlyActive: v.currentlyActive || /present|current|now/i.test(v.endDate || ''),
-      description: v.description || '',
-    })),
-    interests: dedupeStrings(d.interests),
-    references: addIds(d.references, 'ref').map((r) => ({
-      name: r.name || '',
-      jobTitle: r.jobTitle || '',
-      company: r.company || '',
-      email: r.email || '',
-      phone: normalizePhone(r.phone),
-    })),
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File too large. Maximum file size is 10 MB.')
   }
 }
 
 export async function parseResume(file, onStage) {
-  // Step 1 — upload file and get extracted text.
-  onStage?.('uploading')
-  let uploadResult
-  try {
-    uploadResult = await uploadResume(file)
-  } catch (err) {
-    console.error('[resumeParser] upload failed', err)
-    throw err
-  }
-  const text = uploadResult.data?.text
+  validateFile(file)
 
-  if (!text) {
+  // Step 1 — extract raw text from the file in the browser.
+  onStage?.('uploading')
+  const text = await extractText(file)
+
+  if (!text || !text.trim()) {
     throw new Error('No text could be extracted from the file. The file may be empty or corrupted.')
   }
 
-  // Step 2 — send text to AI parser and get structured JSON.
+  // Step 2 — send the text to the backend. The backend calls the Gemini API
+  // and returns structured JSON matching the frontend's expected shape.
   onStage?.('parsing')
-  let parseResult
-  try {
-    parseResult = await parseResumeText(text)
-  } catch (err) {
-    console.error('[resumeParser] parsing failed', err)
-    throw err
-  }
-  const parsed = parseResult.data
+  const result = await parseResumeText(text)
 
-  // Step 3 — normalise to match ResumeContext shape.
-  return normalizeBackendData(parsed)
+  const parsed = result?.data
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('Could not parse the resume. Please try another file.')
+  }
+
+  return parsed
 }

@@ -7,8 +7,11 @@ import Dashboard from './pages/Dashboard'
 import Settings from './pages/Settings'
 import ResumeBuilder from './pages/ResumeBuilder'
 import ResumeEditor from './pages/ResumeEditor'
+import JobFinder from './pages/JobFinder'
+import JobDetailPage from './pages/JobDetailPage'
 import { ResumeProvider } from './context/ResumeContext'
 import { AuthProvider } from './context/AuthContext'
+import { JobSearchProvider } from './context/JobSearchContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -16,7 +19,8 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ResumeProvider>
-          <Routes>
+          <JobSearchProvider>
+            <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
@@ -60,7 +64,24 @@ function App() {
                 </ProtectedRoute>
               }
             />
-          </Routes>
+            <Route
+              path="/dashboard/jobs"
+              element={
+                <ProtectedRoute>
+                  <JobFinder />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/jobs/:jobId"
+              element={
+                <ProtectedRoute>
+                  <JobDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            </Routes>
+          </JobSearchProvider>
         </ResumeProvider>
       </AuthProvider>
     </BrowserRouter>

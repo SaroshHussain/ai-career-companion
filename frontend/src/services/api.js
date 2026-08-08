@@ -84,6 +84,7 @@ async function request(path, options = {}) {
 function classifyHttpError(status, backendMessage, rawText, path) {
   const isUpload = path.includes('/upload')
   const isParse = path.includes('/parse')
+  const isJobs = path.includes('/jobs')
 
   // Prefer the backend's own message for validation failures, since it is
   // already descriptive (e.g. "Only PDF and DOCX files are allowed.").
@@ -92,7 +93,10 @@ function classifyHttpError(status, backendMessage, rawText, path) {
 
   if (status === 413) return 'File too large. Maximum file size is 10 MB.'
   if (status === 415) return 'Unsupported file format. Please upload a PDF or DOCX file.'
-  if (status === 404) return 'Upload service is unavailable. Please try again later.'
+  if (status === 404) {
+    if (isJobs) return backendMessage || 'The job could not be found. It may have expired.'
+    return 'Upload service is unavailable. Please try again later.'
+  }
 
   if (status === 422) {
     return isParse
@@ -104,7 +108,12 @@ function classifyHttpError(status, backendMessage, rawText, path) {
     return 'AI extraction is temporarily rate-limited. Please wait a moment and try again.'
   }
 
+  if (status === 403 && isJobs) {
+    return backendMessage || 'Job search is currently unavailable. Please try again later.'
+  }
+
   if (status >= 500) {
+    if (isJobs) return backendMessage || 'Job search service is temporarily unavailable. Please try again.'
     return isParse
       ? 'Resume parsing service is temporarily unavailable. Please try again.'
       : 'Upload service is temporarily unavailable. Please try again.'
@@ -153,4 +162,18 @@ export async function generateSummary(resumeData) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ resumeData }),
   })
+}
+
+export async function searchJobs({ keywords, region, page = 1, resultsPerPage = 20 } = {}) {
+  const params = new URLSearchParams()
+  if (keywords) params.set('keywords', keywords)
+  if (region) params.set('region', region)
+  params.set('page', String(page))
+  params.set('resultsPerPage', String(resultsPerPage))
+
+  return request(`/jobs?${params.toString()}`)
+}
+
+export async function getJob(jobId) {
+  return request(`/jobs/${encodeURIComponent(jobId)}`)
 }

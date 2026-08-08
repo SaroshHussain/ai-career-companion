@@ -410,29 +410,7 @@ const ResumePreview = forwardRef(function ResumePreview({ data }, ref) {
         </div>
       )}
 
-      {/* Publications */}
-      {publications && publications.length > 0 && (
-        <div className="mt-4">
-          <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-on-surface-variant">
-            Publications
-          </h2>
-          <div className="flex flex-col gap-2">
-            {publications.map((p) => (
-              <div key={p.id}>
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-semibold text-on-surface">{p.title}</p>
-                  {p.date && <p className="shrink-0 text-[11px] text-on-surface-variant">{formatDate(p.date)}</p>}
-                </div>
-                {p.publisher && <p className="text-[11px] text-primary">{p.publisher}</p>}
-                {p.description && (
-                  <p className="text-[11px] leading-relaxed text-on-surface-variant">{p.description}</p>
-                )}
-                {p.url && <p className="text-[11px] text-primary truncate">{p.url}</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Publications removed */}
 
       {/* Volunteer */}
       {volunteer && volunteer.length > 0 && (

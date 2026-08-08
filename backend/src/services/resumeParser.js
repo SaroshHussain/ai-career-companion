@@ -1,5 +1,5 @@
 // AI-powered resume parser.
-// Sends extracted resume text to the Gemini model and asks it to
+// Sends extracted resume text to the Groq AI model and asks it to
 // return structured JSON. The prompt is engineered to extract the
 // maximum amount of information from ANY resume layout, recognize
 // many section-title variants, preserve original wording, normalize
@@ -7,7 +7,7 @@
 // validated and defaulted so downstream consumers always get a usable
 // object.
 
-import { generateText } from './gemini.js'
+import { generateText } from './groq.js'
 
 const TOP_KEYS = [
   'personal',
