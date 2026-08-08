@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   HiOutlineDocumentPlus, HiOutlineArrowPath, HiCheckCircle,
-  HiOutlineCloudArrowUp, HiOutlineExclamationTriangle,
+  HiOutlineCloudArrowUp, HiOutlineExclamationTriangle, HiOutlineBriefcase,
 } from 'react-icons/hi2'
 import { MdDescription } from 'react-icons/md'
 
@@ -110,7 +110,7 @@ function UploadZone({ onFileSelected, disabled }) {
   )
 }
 
-function SuccessState({ fileName, fileSize, onStartEditing }) {
+function SuccessState({ fileName, fileSize, onStartEditing, onFindJobs, searchDefaults }) {
   const formatSize = (bytes) => {
     if (!bytes) return ''
     if (bytes < 1024) return `${bytes} B`
@@ -118,9 +118,10 @@ function SuccessState({ fileName, fileSize, onStartEditing }) {
     return `${(bytes / 1048576).toFixed(1)} MB`
   }
   const ext = fileName.split('.').pop().toUpperCase()
+  const hasDefaults = searchDefaults?.keyword || searchDefaults?.region
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col gap-3">
       <div className="flex w-full flex-col items-center gap-3 rounded-xl border-2 border-green-200 bg-green-50 p-8 text-center">
         <HiCheckCircle className="text-4xl text-green-600" aria-hidden />
         <div>
@@ -133,6 +134,24 @@ function SuccessState({ fileName, fileSize, onStartEditing }) {
           </p>
         </div>
       </div>
+
+      {hasDefaults && (
+        <div className="flex w-full flex-col items-center gap-1.5 rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-4 text-center">
+          <p className="text-label-sm text-on-surface-variant">
+            We found <span className="font-medium text-on-surface">{searchDefaults.keyword || 'your role'}</span>
+            {searchDefaults.region ? ` in ${searchDefaults.region}` : ''} — jump straight into your job search.
+          </p>
+          <button
+            type="button"
+            onClick={onFindJobs}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2.5 text-label-sm font-medium text-primary transition hover:bg-primary/20"
+          >
+            <HiOutlineBriefcase className="text-base" aria-hidden />
+            Find Jobs Now
+          </button>
+        </div>
+      )}
+
       <button
         type="button"
         onClick={onStartEditing}
@@ -153,6 +172,7 @@ function ResumeBuilder() {
   const [status, setStatus] = useState(STATUS.IDLE)
   const [error, setError] = useState(null)
   const [parsedFileInfo, setParsedFileInfo] = useState(null)
+  const [searchDefaults, setSearchDefaults] = useState(null)
 
   const handleCreate = () => {
     resetToNew()
@@ -169,8 +189,10 @@ function ResumeBuilder() {
         setStatus(stage === 'uploading' ? STATUS.UPLOADING : STATUS.PARSING)
       })
 
+      const defaults = extractJobSearchDefaults(parsed)
       loadParsedResume(parsed, { name: file.name, type: file.type, size: file.size })
-      updatePreferences(extractJobSearchDefaults(parsed))
+      updatePreferences(defaults)
+      setSearchDefaults(defaults)
       setParsedFileInfo({ name: file.name, size: file.size })
       setStatus(STATUS.SUCCESS)
     } catch (err) {
@@ -187,6 +209,10 @@ function ResumeBuilder() {
 
   const handleStartEditing = () => {
     navigate('/dashboard/resume/edit', { state: { mode: 'upload' } })
+  }
+
+  const handleFindJobs = () => {
+    navigate('/dashboard/jobs')
   }
 
   const isProcessing = status === STATUS.UPLOADING || status === STATUS.PARSING
@@ -250,6 +276,8 @@ function ResumeBuilder() {
               fileName={parsedFileInfo.name}
               fileSize={parsedFileInfo.size}
               onStartEditing={handleStartEditing}
+              onFindJobs={handleFindJobs}
+              searchDefaults={searchDefaults}
             />
           ) : (
             <UploadZone onFileSelected={handleFileSelected} disabled={isProcessing} />

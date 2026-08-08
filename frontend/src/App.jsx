@@ -9,6 +9,8 @@ import ResumeBuilder from './pages/ResumeBuilder'
 import ResumeEditor from './pages/ResumeEditor'
 import JobFinder from './pages/JobFinder'
 import JobDetailPage from './pages/JobDetailPage'
+import CoverLetter from './pages/CoverLetter'
+import AIAssistant from './pages/AIAssistant'
 import { ResumeProvider } from './context/ResumeContext'
 import { AuthProvider } from './context/AuthContext'
 import { JobSearchProvider } from './context/JobSearchContext'
@@ -77,6 +79,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <JobDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/cover-letter"
+              element={
+                <ProtectedRoute>
+                  <CoverLetter />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/ai"
+              element={
+                <ProtectedRoute>
+                  <AIAssistant />
                 </ProtectedRoute>
               }
             />

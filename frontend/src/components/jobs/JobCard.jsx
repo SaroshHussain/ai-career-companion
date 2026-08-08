@@ -24,8 +24,24 @@ function JobCard({ job }) {
     .join('')
     .toUpperCase()
 
+  const handleOpen = () => navigate(`/dashboard/jobs/${job.id}`)
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleOpen()
+    }
+  }
+
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-card transition-shadow hover:shadow-card-hover">
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={handleOpen}
+      onKeyDown={handleKeyDown}
+      aria-label={`View details for ${job.title}`}
+      className="flex cursor-pointer flex-col gap-3 rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-card transition-shadow hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-label-sm font-bold text-primary">
@@ -38,14 +54,7 @@ function JobCard({ job }) {
             )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate(`/dashboard/jobs/${job.id}`)}
-          className="rounded-md p-1.5 text-on-surface-variant transition hover:bg-surface-container-low hover:text-primary"
-          aria-label={`View details for ${job.title}`}
-        >
-          <HiOutlineArrowRight className="text-base" aria-hidden />
-        </button>
+        <HiOutlineArrowRight className="mt-1 text-base text-on-surface-variant" aria-hidden />
       </div>
 
       {(job.location || job.type || job.salary) && (

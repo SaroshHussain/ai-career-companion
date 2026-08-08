@@ -164,6 +164,22 @@ export async function generateSummary(resumeData) {
   })
 }
 
+export async function generateCoverLetter(resumeData, application) {
+  return request('/ai/generate-cover-letter', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resumeData, application }),
+  })
+}
+
+export async function sendChatMessage(messages) {
+  return request('/ai/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages }),
+  })
+}
+
 export async function searchJobs({ keywords, region, page = 1, resultsPerPage = 20 } = {}) {
   const params = new URLSearchParams()
   if (keywords) params.set('keywords', keywords)

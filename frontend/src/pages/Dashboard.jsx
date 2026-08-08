@@ -43,7 +43,7 @@ const emptyFeatures = [
     description: 'No cover letters created yet.',
     action: 'Create One',
     icon: HiOutlineDocument,
-    href: '#',
+    href: '/dashboard/cover-letter',
     color: 'text-amber-600 bg-amber-50',
   },
 ]

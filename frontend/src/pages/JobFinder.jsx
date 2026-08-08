@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { HiOutlineMagnifyingGlass, HiOutlineArrowPath, HiOutlineExclamationTriangle, HiOutlineBriefcase } from 'react-icons/hi2'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import JobCard from '../components/jobs/JobCard'
+import { useJobSearch } from '../context/JobSearchContext'
 import { searchJobs } from '../services/api'
 
 const RESULTS_PER_PAGE = 20
@@ -13,10 +14,7 @@ const RESULTS_PER_PAGE = 20
 // while the API can't actually reach them.
 const MAX_TOTAL_PAGES = 50
 
-function SearchForm({ onSubmit, isSearching }) {
-  const [keywords, setKeywords] = useState('')
-  const [region, setRegion] = useState('')
-
+function SearchForm({ keywords, region, onKeywordsChange, onRegionChange, onSubmit, isSearching }) {
   const handleSubmit = (event) => {
     event.preventDefault()
     onSubmit({ keywords: keywords.trim(), region: region.trim() })
@@ -40,7 +38,7 @@ function SearchForm({ onSubmit, isSearching }) {
             id="job-keywords"
             type="text"
             value={keywords}
-            onChange={(event) => setKeywords(event.target.value)}
+            onChange={(event) => onKeywordsChange(event.target.value)}
             placeholder="e.g. software engineer, data analyst"
             className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest py-2.5 pl-10 pr-3 text-body-md text-on-surface placeholder:text-on-surface-variant outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
           />
@@ -55,7 +53,7 @@ function SearchForm({ onSubmit, isSearching }) {
           id="job-region"
           type="text"
           value={region}
-          onChange={(event) => setRegion(event.target.value)}
+          onChange={(event) => onRegionChange(event.target.value)}
           placeholder="e.g. Islamabad, Lahore, Remote"
           className="mt-1.5 w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 text-body-md text-on-surface placeholder:text-on-surface-variant outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
         />
@@ -185,63 +183,136 @@ function EmptyState({ onReset }) {
 
 function JobFinder() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const { preferences, cachedSearch, cacheSearchResults } = useJobSearch()
+  const [keywords, setKeywords] = useState('')
+  const [region, setRegion] = useState('')
   const [page, setPage] = useState(parseInt(searchParams.get('page'), 10) || 1)
   const [isSearching, setIsSearching] = useState(false)
   const [error, setError] = useState(null)
   const [results, setResults] = useState(null)
+  const hasInitialized = useRef(false)
 
   const jobs = results?.jobs || []
   const totalCount = results?.totalCount || 0
   const totalPages = results?.totalPages || 0
 
-  const handleSearch = useCallback(async ({ keywords, region }, pageNumber = 1) => {
+  const runSearch = useCallback(async ({ keywords: kw, region: rg }, pageNumber = 1) => {
     setIsSearching(true)
     setError(null)
 
     try {
-      const data = await searchJobs({ keywords, region, page: pageNumber, resultsPerPage: RESULTS_PER_PAGE })
+      const data = await searchJobs({ keywords: kw, region: rg, page: pageNumber, resultsPerPage: RESULTS_PER_PAGE })
       const { jobs: foundJobs, totalCount: foundCount, resultsPerPage } = data.data
 
       const maxPages = Math.ceil(foundCount / resultsPerPage)
       const cappedTotalPages = Math.max(1, Math.min(maxPages, MAX_TOTAL_PAGES))
 
-      setResults({
+      const nextResults = {
         jobs: foundJobs,
         totalCount: foundCount,
         totalPages: cappedTotalPages,
-      })
+      }
+
+      setResults(nextResults)
+      setKeywords(kw)
+      setRegion(rg)
       setPage(pageNumber)
-      setSearchParams({ keywords, region, page: String(pageNumber) }, { replace: true })
+      setSearchParams({ keywords: kw, region: rg, page: String(pageNumber) }, { replace: true })
+
+      cacheSearchResults({
+        keywords: kw,
+        region: rg,
+        page: pageNumber,
+        totalPages: cappedTotalPages,
+        totalCount: foundCount,
+        jobs: foundJobs,
+      })
     } catch (err) {
       console.error('[JobFinder] search failed', err)
       setError(err.message || 'Failed to search jobs. Please try again.')
     } finally {
       setIsSearching(false)
     }
+  }, [cacheSearchResults, setSearchParams])
+
+  // Restore a cached search (same keywords/region/page) so navigating back
+  // to /dashboard/jobs doesn't re-hit the Jooble API. Falls back to fetching.
+  const restoreFromCache = useCallback((cached) => {
+    setKeywords(cached.keywords)
+    setRegion(cached.region)
+    setPage(cached.page)
+    setResults({
+      jobs: cached.jobs,
+      totalCount: cached.totalCount,
+      totalPages: cached.totalPages,
+    })
+    setSearchParams(
+      { keywords: cached.keywords, region: cached.region, page: String(cached.page) },
+      { replace: true },
+    )
   }, [setSearchParams])
 
-  // Run the search on first mount when the URL already contains search
-  // params (e.g. after a refresh or when navigating back to a results URL).
+  // On first mount:
+  //   1. If the URL has search params, use them (restoring cached results
+  //      when they match, otherwise fetching).
+  //   2. Otherwise, if we have cached results, restore them so the page
+  //      never reloads when navigating back.
+  //   3. Otherwise, if the user has job-search preferences (from their
+  //      uploaded resume), prefill the form and auto-run that search.
   useEffect(() => {
-    const keywords = searchParams.get('keywords')
-    if (!keywords) return
+    if (hasInitialized.current) return
+    hasInitialized.current = true
 
-    const region = searchParams.get('region') || ''
-    const pageNumber = parseInt(searchParams.get('page'), 10) || 1
-    handleSearch({ keywords, region }, pageNumber)
+    const urlKeywords = searchParams.get('keywords')
+
+    if (urlKeywords) {
+      const urlRegion = searchParams.get('region') || ''
+      const urlPage = parseInt(searchParams.get('page'), 10) || 1
+
+      const matchesCache =
+        cachedSearch &&
+        cachedSearch.keywords === urlKeywords &&
+        cachedSearch.region === urlRegion &&
+        cachedSearch.page === urlPage
+
+      if (matchesCache) {
+        restoreFromCache(cachedSearch)
+      } else {
+        runSearch({ keywords: urlKeywords, region: urlRegion }, urlPage)
+      }
+      return
+    }
+
+    if (cachedSearch) {
+      restoreFromCache(cachedSearch)
+      return
+    }
+
+    if (preferences?.keyword) {
+      setKeywords(preferences.keyword)
+      setRegion(preferences.region || '')
+      runSearch(
+        { keywords: preferences.keyword, region: preferences.region || '' },
+        1,
+      )
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const handleSearch = (values, pageNumber = 1) => {
+    runSearch(values, pageNumber)
+  }
+
   const handlePageChange = (pageNumber) => {
     if (pageNumber === page) return
-    const keywords = searchParams.get('keywords') || ''
-    const region = searchParams.get('region') || ''
-    handleSearch({ keywords, region }, pageNumber)
+    runSearch({ keywords, region }, pageNumber)
   }
 
   const handleReset = () => {
     setResults(null)
     setError(null)
+    setKeywords('')
+    setRegion('')
     setPage(1)
     setSearchParams({}, { replace: true })
   }
@@ -256,7 +327,14 @@ function JobFinder() {
           </p>
         </div>
 
-        <SearchForm onSubmit={handleSearch} isSearching={isSearching} />
+        <SearchForm
+          keywords={keywords}
+          region={region}
+          onKeywordsChange={setKeywords}
+          onRegionChange={setRegion}
+          onSubmit={handleSearch}
+          isSearching={isSearching}
+        />
 
         {error && (
           <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-4">

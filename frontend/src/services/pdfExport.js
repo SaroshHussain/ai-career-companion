@@ -9,6 +9,19 @@ export async function generateResumePDF(resumeData) {
   return blob
 }
 
+export async function generateCoverLetterPDF(letter, resumeData) {
+  const { pdf } = await import('@react-pdf/renderer')
+  const { default: CoverLetterPDFDocument } = await import(
+    '../components/cover-letter/CoverLetterPDF'
+  )
+
+  const doc = CoverLetterPDFDocument({ letter, resumeData })
+  const instance = pdf(doc)
+  const blob = await instance.toBlob()
+
+  return blob
+}
+
 export function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -31,4 +44,14 @@ export function getPDFFilename(personal) {
     return `${name.replace(/\s+/g, '_')}_Resume.pdf`
   }
   return 'Resume.pdf'
+}
+
+export function getCoverLetterFilename(personal, application) {
+  const name = personal?.fullName?.trim()
+  const company = application?.company?.trim()
+  if (name && company) {
+    return `${name.replace(/\s+/g, '_')}_Cover_Letter_${company.replace(/\s+/g, '_')}.pdf`
+  }
+  if (name) return `${name.replace(/\s+/g, '_')}_Cover_Letter.pdf`
+  return 'Cover_Letter.pdf'
 }
