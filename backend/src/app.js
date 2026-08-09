@@ -6,8 +6,10 @@
 import express from 'express'
 import cors from 'cors'
 import config from './config/index.js'
+import authRoutes from './routes/auth.js'
 import healthRoutes from './routes/health.js'
 import resumeRoutes from './routes/resume.js'
+import resumesRoutes from './routes/resumes.js'
 import aiRoutes from './routes/ai.js'
 import jobsRoutes from './routes/jobs.js'
 import errorHandler from './middleware/errorHandler.js'
@@ -32,8 +34,10 @@ app.use(express.urlencoded({ extended: true }))
 // ----- Routes -----
 
 // All API routes are namespaced under /api.
+app.use('/api', authRoutes)
 app.use('/api', healthRoutes)
 app.use('/api/resume', resumeRoutes)
+app.use('/api/resumes', resumesRoutes)
 app.use('/api', aiRoutes)
 app.use('/api', jobsRoutes)
 

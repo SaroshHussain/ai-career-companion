@@ -143,7 +143,9 @@ function ResumeEditor() {
     addReference, updateReference, removeReference,
     addInterest, removeInterest,
     loadResume,
+    loadResumeById,
     resetToNew,
+    resumeId,
     mode: ctxMode,
   } = useResume()
 
@@ -255,7 +257,7 @@ function ResumeEditor() {
   }, [mode, resumeData, loadResume])
 
   useEffect(() => {
-    if (mode === 'edit' && loadResume) {
+    if (mode === 'edit' && !resumeId && loadResume) {
       const saved = localStorage.getItem(AUTO_SAVE_KEY)
       if (saved) {
         try {
@@ -265,6 +267,36 @@ function ResumeEditor() {
       }
     }
   }, [])
+
+  // When a saved resume document id exists (e.g. after a page refresh) and the
+  // editor has no data yet, populate it from the backend by id.
+  useEffect(() => {
+    if (mode === 'new') return
+    if (!resumeId || !isResumeEmpty(resumeData)) return
+
+    let mounted = true
+    loadResumeById(resumeId)
+      .then((resume) => {
+        if (mounted && resume) {
+          localStorage.removeItem(AUTO_SAVE_KEY)
+        }
+      })
+      .catch((err) => {
+        console.error('[ResumeEditor] failed to load resume by id', err)
+        const saved = localStorage.getItem(AUTO_SAVE_KEY)
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved)
+            if (parsed?.personal) loadResume(parsed)
+          } catch { /* ignore */ }
+        }
+      })
+    return () => {
+      mounted = false
+    }
+    // Intentionally not depending on resumeData — we only want this to run
+    // once, using the initial (empty) state captured at mount.
+  }, [mode, resumeId, loadResumeById, loadResume])
 
   useEffect(() => {
     if (mode === 'new') return

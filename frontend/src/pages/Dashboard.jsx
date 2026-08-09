@@ -1,57 +1,36 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   HiOutlineDocumentText,
   HiOutlineBriefcase,
-  HiOutlineMicrophone,
   HiOutlineDocument,
   HiOutlineSparkles,
   HiOutlineAcademicCap,
 } from 'react-icons/hi2'
-import { MdArrowForward } from 'react-icons/md'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import AIInsightsCard from '../components/dashboard/AIInsightsCard'
+import StatCard from '../components/dashboard/StatCard'
 import { useAuth } from '../hooks/useAuth'
-
-const emptyFeatures = [
-  {
-    title: 'Resume Builder',
-    description: 'No resume has been created yet.',
-    action: 'Create Resume',
-    icon: HiOutlineDocumentText,
-    href: '/dashboard/resume',
-    color: 'text-primary bg-primary/10',
-  },
-  {
-    title: 'Job Finder',
-    description: 'No job searches yet.',
-    action: 'Find Jobs',
-    icon: HiOutlineBriefcase,
-    href: '/dashboard/jobs',
-    color: 'text-secondary bg-secondary/10',
-  },
-  {
-    title: 'Interview Coach',
-    description: 'No interview sessions yet.',
-    action: 'Start Practice',
-    icon: HiOutlineMicrophone,
-    href: '#',
-    color: 'text-tertiary-container bg-tertiary-container/10',
-  },
-  {
-    title: 'Cover Letter',
-    description: 'No cover letters created yet.',
-    action: 'Create One',
-    icon: HiOutlineDocument,
-    href: '/dashboard/cover-letter',
-    color: 'text-amber-600 bg-amber-50',
-  },
-]
+import { getResumeDocuments } from '../services/api'
 
 function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const name = user?.name || 'Guest'
+  const [resumeCount, setResumeCount] = useState(0)
+
+  useEffect(() => {
+    let mounted = true
+    getResumeDocuments()
+      .then((data) => {
+        if (mounted && typeof data?.count === 'number') setResumeCount(data.count)
+      })
+      .catch((err) => console.error('[Dashboard] failed to load resume count', err))
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   return (
     <DashboardLayout>
@@ -64,33 +43,36 @@ function Dashboard() {
           </p>
         </div>
 
-        {/* Empty State Feature Cards */}
+        {/* Overview Stats */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {emptyFeatures.map((feature) => {
-            const Icon = feature.icon
-            return (
-              <article
-                key={feature.title}
-                className="flex flex-col gap-4 rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-card transition-shadow hover:shadow-card-hover"
-              >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${feature.color}`}>
-                  <Icon className="text-xl" aria-hidden />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-body-sm font-medium text-on-surface">{feature.title}</h3>
-                  <p className="mt-0.5 text-label-sm text-on-surface-variant">{feature.description}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => navigate(feature.href)}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-label-sm font-medium text-white transition hover:bg-primary/90"
-                >
-                  {feature.action}
-                  <MdArrowForward aria-hidden />
-                </button>
-              </article>
-            )
-          })}
+          <StatCard
+            title="Total Resumes"
+            value={resumeCount}
+            subtitle="Saved on your account"
+            icon={HiOutlineDocumentText}
+            color="blue"
+          />
+          <StatCard
+            title="Jobs Applied"
+            value={0}
+            subtitle="Tracked applications"
+            icon={HiOutlineBriefcase}
+            color="indigo"
+          />
+          <StatCard
+            title="Cover Letters"
+            value={0}
+            subtitle="Created so far"
+            icon={HiOutlineDocument}
+            color="teal"
+          />
+          <StatCard
+            title="AI Sessions"
+            value={0}
+            subtitle="Assist & interview prep"
+            icon={HiOutlineSparkles}
+            color="amber"
+          />
         </div>
 
         {/* Get Started + AI Insights */}

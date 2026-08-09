@@ -14,6 +14,17 @@ const config = {
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
   isDev: process.env.NODE_ENV !== 'production',
 
+  // MongoDB connection string. Falls back to null so the server can still
+  // boot (with a warning) if no database is configured.
+  mongoUri: process.env.MONGODB_URI || null,
+
+  jwt: {
+    // Secret used to sign and verify auth tokens.
+    secret: process.env.JWT_SECRET || 'pathfinder_dev_secret',
+    // Token lifetime, e.g. "7d".
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  },
+
   upload: {
     // Directory where uploaded files are stored temporarily.
     dest: join(__dirname, '..', '..', 'uploads'),

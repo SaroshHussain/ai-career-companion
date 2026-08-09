@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { HiEye, HiEyeSlash } from 'react-icons/hi2'
 import { FcGoogle } from 'react-icons/fc'
@@ -7,14 +7,53 @@ import { MdArrowForward } from 'react-icons/md'
 
 import Input from '../components/ui/Input'
 import Button from '../components/ui/Button'
+import { useAuth } from '../hooks/useAuth'
 
 function SignUp() {
   const navigate = useNavigate()
-  const [showPassword, setShowPassword] = useState(false)
+  const { register, isAuthenticated } = useAuth()
 
-  const handleSubmit = (event) => {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [agree, setAgree] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [touched, setTouched] = useState({ name: false, email: false, password: false })
+
+  useEffect(() => {
+    if (isAuthenticated) navigate('/dashboard', { replace: true })
+  }, [isAuthenticated, navigate])
+
+  const nameError = touched.name && !name.trim() ? 'Name is required.' : ''
+  const emailError = touched.email && !email.trim() ? 'Email is required.' : ''
+  const passwordError =
+    touched.password && password.length < 12
+      ? 'Password must be at least 12 characters.'
+      : ''
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    navigate('/dashboard')
+    setError('')
+    setTouched({ name: true, email: true, password: true })
+
+    if (!name.trim() || !email.trim() || password.length < 12) return
+    if (!agree) {
+      setError('Please agree to the Terms of Service and Privacy Policy.')
+      return
+    }
+
+    setLoading(true)
+
+    const result = await register(name.trim(), email.trim(), password)
+    setLoading(false)
+
+    if (result.success) {
+      navigate('/dashboard', { replace: true })
+    } else {
+      setError(result.error)
+    }
   }
 
   return (
@@ -41,14 +80,16 @@ function SignUp() {
             <div className="flex flex-col gap-3">
               <button
                 type="button"
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FcGoogle className="text-xl" />
                 Sign up with Google
               </button>
               <button
                 type="button"
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FaLinkedinIn className="text-xl text-[#0A66C2]" />
                 Sign up with LinkedIn
@@ -61,6 +102,12 @@ function SignUp() {
               <span className="flex-1 border-t border-outline-variant/30" />
             </div>
 
+            {error && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-body-sm text-red-700">
+                {error}
+              </div>
+            )}
+
             <form className="flex flex-col gap-5" noValidate onSubmit={handleSubmit}>
               <Input
                 label="Full Name"
@@ -68,6 +115,10 @@ function SignUp() {
                 type="text"
                 placeholder="John Doe"
                 autoComplete="name"
+                value={name}
+                error={nameError}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, name: true }))}
               />
               <Input
                 label="Email Address"
@@ -75,6 +126,10 @@ function SignUp() {
                 type="email"
                 placeholder="name@company.com"
                 autoComplete="email"
+                value={email}
+                error={emailError}
+                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setTouched((t) => ({ ...t, email: true }))}
               />
 
               <div className="flex flex-col gap-1.5">
@@ -87,7 +142,14 @@ function SignUp() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Create a strong password"
                     autoComplete="new-password"
-                    className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2.5 pr-10 text-body-md text-on-surface outline-none transition focus:border-primary focus:ring-1 focus:ring-primary"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+                    className={`w-full rounded-lg border bg-surface-container-lowest px-3 py-2.5 pr-10 text-body-md text-on-surface outline-none transition focus:ring-1 ${
+                      passwordError
+                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500/30'
+                        : 'border-outline-variant focus:border-primary focus:ring-primary'
+                    }`}
                   />
                   <button
                     type="button"
@@ -98,14 +160,16 @@ function SignUp() {
                     {showPassword ? <HiEyeSlash className="text-xl" /> : <HiEye className="text-xl" />}
                   </button>
                 </div>
-                <p className="text-body-sm text-on-surface-variant">
-                  Must be at least 12 characters with a mix of letters and symbols.
-                </p>
+                {passwordError && (
+                  <p className="text-body-sm text-red-600">{passwordError}</p>
+                )}
               </div>
 
               <label className="flex cursor-pointer items-start gap-2.5 text-body-sm text-on-surface">
                 <input
                   type="checkbox"
+                  checked={agree}
+                  onChange={(e) => setAgree(e.target.checked)}
                   className="mt-0.5 h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary"
                 />
                 I agree to the{' '}
@@ -114,8 +178,8 @@ function SignUp() {
                 <a href="#" className="text-primary hover:underline">Privacy Policy</a>
               </label>
 
-              <Button type="submit" className="w-full" iconRight={<MdArrowForward />}>
-                Create Your Account
+              <Button type="submit" className="w-full" disabled={loading} iconRight={<MdArrowForward />}>
+                {loading ? 'Creating Account...' : 'Create Your Account'}
               </Button>
             </form>
           </div>

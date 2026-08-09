@@ -26,9 +26,31 @@ class ApiError extends Error {
   }
 }
 
+// Reads the JWT stored by AuthContext so every request can authenticate.
+// Returns null when there is no stored session (or it cannot be parsed).
+function getAuthToken() {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem('pathfinder-auth')
+    if (raw) {
+      const data = JSON.parse(raw)
+      return data?.token || null
+    }
+  } catch (error) {
+    console.warn('Unable to read auth token from storage.', error)
+  }
+  return null
+}
+
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`
   const headers = { 'Accept': 'application/json', ...(options.headers || {}) }
+
+  // Attach the JWT when one is available (unless the caller set its own).
+  const token = getAuthToken()
+  if (token && !headers.Authorization) {
+    headers.Authorization = `Bearer ${token}`
+  }
 
   // Build an AbortController so hung requests fail with a clear timeout
   // message instead of the browser's generic network error.
@@ -192,4 +214,56 @@ export async function searchJobs({ keywords, region, page = 1, resultsPerPage = 
 
 export async function getJob(jobId) {
   return request(`/jobs/${encodeURIComponent(jobId)}`)
+}
+
+// ----- Authentication -----
+
+export async function registerUser({ name, email, password }) {
+  return request('/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, password }),
+  })
+}
+
+export async function loginUser({ email, password }) {
+  return request('/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+}
+
+export async function fetchCurrentUser() {
+  return request('/auth/me')
+}
+
+// ----- Saved resume documents -----
+
+export async function createResumeDocument({ name, data, fileInfo }) {
+  return request('/resumes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, data, fileInfo }),
+  })
+}
+
+export async function getResumeDocuments() {
+  return request('/resumes')
+}
+
+export async function getResumeDocumentById(id) {
+  return request(`/resumes/${encodeURIComponent(id)}`)
+}
+
+export async function updateResumeDocument(id, { name, data, fileInfo }) {
+  return request(`/resumes/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, data, fileInfo }),
+  })
+}
+
+export async function deleteResumeDocument(id) {
+  return request(`/resumes/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }

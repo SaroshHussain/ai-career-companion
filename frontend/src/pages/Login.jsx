@@ -38,9 +38,7 @@ function Login() {
 
     setLoading(true)
 
-    await new Promise((r) => setTimeout(r, 600))
-
-    const result = login(email.trim(), password)
+    const result = await login(email.trim(), password)
     setLoading(false)
 
     if (result.success) {

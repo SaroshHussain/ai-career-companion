@@ -1,7 +1,33 @@
 import { createContext, useContext, useState, useCallback } from 'react'
 import { normalizeParsedResume } from '../services/resumeLoader'
+import {
+  createResumeDocument,
+  getResumeDocumentById,
+  updateResumeDocument,
+} from '../services/api'
+
+const RESUME_ID_KEY = 'pathfinder-resume-id'
 
 const ResumeContext = createContext(null)
+
+function readResumeId() {
+  if (typeof window === 'undefined') return null
+  try {
+    return window.localStorage.getItem(RESUME_ID_KEY) || null
+  } catch {
+    return null
+  }
+}
+
+function persistResumeId(id) {
+  if (typeof window === 'undefined') return
+  try {
+    if (id) window.localStorage.setItem(RESUME_ID_KEY, id)
+    else window.localStorage.removeItem(RESUME_ID_KEY)
+  } catch {
+    // ignore storage failures
+  }
+}
 
 function dedupeStrings(arr) {
   const seen = new Set()
@@ -58,6 +84,8 @@ export function ResumeProvider({ children }) {
   const [resumeData, setResumeData] = useState(emptyResume)
   const [uploadedFile, setUploadedFile] = useState(null)
   const [mode, setMode] = useState('new')
+  // Id of the persisted resume document on the backend (if any).
+  const [resumeId, setResumeId] = useState(readResumeId)
 
   const loadParsedResume = useCallback((parsedData, file) => {
     setResumeData(normalizeParsedResume(parsedData))
@@ -69,6 +97,54 @@ export function ResumeProvider({ children }) {
     setResumeData(emptyResume)
     setUploadedFile(null)
     setMode('new')
+    setResumeId(null)
+    persistResumeId(null)
+  }, [])
+
+  // Create or update the resume document on the backend and keep its id.
+  // Accepts explicit overrides so callers can persist freshly parsed data
+  // without waiting for context state to flush.
+  // Note: the data is saved AS-IS (no normalization) so the exact shape the
+  // backend API returned — including every field such as the top-level
+  // "summary" — is preserved in MongoDB.
+  const saveResumeToServer = useCallback(async (dataOverride, fileOverride) => {
+    const data = dataOverride || resumeData
+    const file = fileOverride || uploadedFile
+    const name = data.personal?.fullName?.trim() || file?.name || 'Untitled Resume'
+    const payload = {
+      name,
+      data,
+      fileInfo: file
+        ? { name: file.name, type: file.type, size: file.size }
+        : undefined,
+    }
+
+    let result
+    if (resumeId) {
+      result = await updateResumeDocument(resumeId, payload)
+    } else {
+      result = await createResumeDocument(payload)
+      const id = result?.resume?.id
+      if (id) {
+        setResumeId(id)
+        persistResumeId(id)
+      }
+    }
+
+    return result?.resume || null
+  }, [resumeData, uploadedFile, resumeId])
+
+  // Load a saved resume document from the backend by id.
+  const loadResumeById = useCallback(async (id) => {
+    const result = await getResumeDocumentById(id)
+    const resume = result?.resume
+    if (resume) {
+      setResumeId(id)
+      persistResumeId(id)
+      setResumeData(normalizeParsedResume(resume.data))
+      setMode('edit')
+    }
+    return resume || null
   }, [])
 
   const loadResume = useCallback((data) => {
@@ -398,8 +474,11 @@ export function ResumeProvider({ children }) {
     resumeData,
     uploadedFile,
     mode,
+    resumeId,
     loadParsedResume,
     resetToNew,
+    saveResumeToServer,
+    loadResumeById,
     loadResume,
     updatePersonal,
     updateSummary,
