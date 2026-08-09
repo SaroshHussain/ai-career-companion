@@ -20,14 +20,9 @@ const app = express()
 
 // ----- Middleware -----
 
-// Enable CORS so the frontend (Vite dev server or deployed app) can call the API.
+// Temporarily allow requests from any origin during development/testing.
 app.use(cors({
-  origin(origin, callback) {
-    // Allow requests with no Origin header (curl, same-origin, health checks).
-    if (!origin) return callback(null, true)
-    const allowed = config.clientOrigins.includes(origin.replace(/\/$/, ''))
-    return callback(null, allowed)
-  },
+  origin: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
 }))
