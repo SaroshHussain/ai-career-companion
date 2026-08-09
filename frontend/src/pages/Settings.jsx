@@ -6,6 +6,7 @@ import ProfileSection from '../components/settings/ProfileSection'
 import PersonalInfo from '../components/settings/PersonalInfo'
 import ProfessionalLinks from '../components/settings/ProfessionalLinks'
 import AppearanceSelector from '../components/settings/AppearanceSelector'
+import BillingDetails from '../components/settings/BillingDetails'
 import Toast from '../components/ui/Toast'
 import { useAuth } from '../hooks/useAuth'
 
@@ -60,6 +61,17 @@ function Settings() {
 
   const [appearance, setAppearance] = useState(loadAppearance)
 
+  const [billingEmail, setBillingEmail] = useState('')
+  const [cardHolder, setCardHolder] = useState('')
+  const [cardNumber, setCardNumber] = useState('')
+  const [expiry, setExpiry] = useState('')
+  const [cvv, setCvv] = useState('')
+  const [billingAddress, setBillingAddress] = useState('')
+  const [billingCity, setBillingCity] = useState('')
+  const [billingState, setBillingState] = useState('')
+  const [billingZip, setBillingZip] = useState('')
+  const [billingCountry, setBillingCountry] = useState('')
+
   const [toastOpen, setToastOpen] = useState(false)
 
   const [savedState, setSavedState] = useState(null)
@@ -90,6 +102,16 @@ function Settings() {
         setPortfolio(s.portfolio || '')
         setGithub(s.github || '')
         setAppearance(s.appearance || 'system')
+        setBillingEmail(s.billingEmail || '')
+        setCardHolder(s.cardHolder || '')
+        setCardNumber(s.cardNumber || '')
+        setExpiry(s.expiry || '')
+        setCvv(s.cvv || '')
+        setBillingAddress(s.billingAddress || '')
+        setBillingCity(s.billingCity || '')
+        setBillingState(s.billingState || '')
+        setBillingZip(s.billingZip || '')
+        setBillingCountry(s.billingCountry || '')
         setSavedState(s)
       } else {
         setSavedState({
@@ -104,6 +126,16 @@ function Settings() {
           portfolio: '',
           github: '',
           appearance: 'system',
+          billingEmail: '',
+          cardHolder: '',
+          cardNumber: '',
+          expiry: '',
+          cvv: '',
+          billingAddress: '',
+          billingCity: '',
+          billingState: '',
+          billingZip: '',
+          billingCountry: '',
         })
       }
     } catch {
@@ -119,6 +151,16 @@ function Settings() {
         portfolio: '',
         github: '',
         appearance: 'system',
+        billingEmail: '',
+        cardHolder: '',
+        cardNumber: '',
+        expiry: '',
+        cvv: '',
+        billingAddress: '',
+        billingCity: '',
+        billingState: '',
+        billingZip: '',
+        billingCountry: '',
       }
       setSavedState(fallback)
     }
@@ -138,6 +180,16 @@ function Settings() {
       portfolio,
       github,
       appearance,
+      billingEmail,
+      cardHolder,
+      cardNumber,
+      expiry,
+      cvv,
+      billingAddress,
+      billingCity,
+      billingState,
+      billingZip,
+      billingCountry,
     }
     localStorage.setItem('pathfinder-settings', JSON.stringify(newState))
     setSavedState(newState)
@@ -157,6 +209,16 @@ function Settings() {
     setPortfolio(savedState.portfolio || '')
     setGithub(savedState.github || '')
     setAppearance(savedState.appearance || 'system')
+    setBillingEmail(savedState.billingEmail || '')
+    setCardHolder(savedState.cardHolder || '')
+    setCardNumber(savedState.cardNumber || '')
+    setExpiry(savedState.expiry || '')
+    setCvv(savedState.cvv || '')
+    setBillingAddress(savedState.billingAddress || '')
+    setBillingCity(savedState.billingCity || '')
+    setBillingState(savedState.billingState || '')
+    setBillingZip(savedState.billingZip || '')
+    setBillingCountry(savedState.billingCountry || '')
   }
 
   const nameError = name.trim().length === 0
@@ -173,24 +235,46 @@ function Settings() {
 
         <SettingsTabs tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {activeTab !== 'Profile' ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-outline-variant/50 py-16 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-container-low">
-              <svg
-                className="h-6 w-6 text-outline-variant"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
+        {activeTab === 'Billing' ? (
+          <div className="space-y-6">
+            <BillingDetails
+              cardHolder={cardHolder}
+              onCardHolderChange={setCardHolder}
+              cardNumber={cardNumber}
+              onCardNumberChange={setCardNumber}
+              expiry={expiry}
+              onExpiryChange={setExpiry}
+              cvv={cvv}
+              onCvvChange={setCvv}
+              billingEmail={billingEmail}
+              onBillingEmailChange={setBillingEmail}
+              address={billingAddress}
+              onAddressChange={setBillingAddress}
+              city={billingCity}
+              onCityChange={setBillingCity}
+              state={billingState}
+              onStateChange={setBillingState}
+              zip={billingZip}
+              onZipChange={setBillingZip}
+              country={billingCountry}
+              onCountryChange={setBillingCountry}
+            />
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="inline-flex items-center justify-center rounded-lg border border-outline-variant/60 bg-surface-container-lowest px-4 py-2.5 text-label-sm font-medium text-on-surface transition hover:bg-surface-container-low hover:border-outline-variant focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-body-sm font-medium text-on-surface">Coming Soon</p>
-              <p className="mt-0.5 text-label-sm text-on-surface-variant">
-                This feature is under development.
-              </p>
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="inline-flex items-center justify-center rounded-lg bg-primary px-4 py-2.5 text-label-sm font-medium text-white shadow-card transition hover:bg-primary/95 hover:shadow-card-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98]"
+              >
+                Save Changes
+              </button>
             </div>
           </div>
         ) : (
