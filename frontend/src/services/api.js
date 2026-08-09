@@ -4,7 +4,13 @@
 // raw browser errors like "Failed to fetch". The underlying error is
 // always logged to the console so the real cause can be debugged.
 
-const API_BASE = '/api'
+const API_BASE = (() => {
+  const configured = import.meta.env.VITE_API_URL?.trim() || ''
+  if (!configured) return '/api'
+
+  const normalized = configured.replace(/\/$/, '')
+  return normalized.endsWith('/api') ? normalized : `${normalized}/api`
+})()
 
 // Requests that hang this long are aborted (default 30s; file uploads
 // and AI parsing can legitimately take a few seconds).
