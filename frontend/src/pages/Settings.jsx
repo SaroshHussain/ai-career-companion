@@ -9,7 +9,7 @@ import AppearanceSelector from '../components/settings/AppearanceSelector'
 import Toast from '../components/ui/Toast'
 import { useAuth } from '../hooks/useAuth'
 
-const TABS = ['Profile', 'Account', 'Notifications', 'Security', 'Billing']
+const TABS = ['Profile', 'Billing']
 
 const APPEARANCE_KEY = 'pathfinder-appearance'
 

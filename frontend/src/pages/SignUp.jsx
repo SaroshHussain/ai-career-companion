@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { HiEye, HiEyeSlash } from 'react-icons/hi2'
-import { FcGoogle } from 'react-icons/fc'
-import { FaLinkedinIn } from 'react-icons/fa6'
 import { MdArrowForward } from 'react-icons/md'
 
 import Input from '../components/ui/Input'
@@ -29,8 +27,8 @@ function SignUp() {
   const nameError = touched.name && !name.trim() ? 'Name is required.' : ''
   const emailError = touched.email && !email.trim() ? 'Email is required.' : ''
   const passwordError =
-    touched.password && password.length < 12
-      ? 'Password must be at least 12 characters.'
+    touched.password && password.length < 8
+      ? 'Password must be at least 8 characters.'
       : ''
 
   const handleSubmit = async (event) => {
@@ -38,7 +36,7 @@ function SignUp() {
     setError('')
     setTouched({ name: true, email: true, password: true })
 
-    if (!name.trim() || !email.trim() || password.length < 12) return
+    if (!name.trim() || !email.trim() || password.length < 8) return
     if (!agree) {
       setError('Please agree to the Terms of Service and Privacy Policy.')
       return
@@ -77,31 +75,6 @@ function SignUp() {
           </div>
 
           <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-xl shadow-card">
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <FcGoogle className="text-xl" />
-                Sign up with Google
-              </button>
-              <button
-                type="button"
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <FaLinkedinIn className="text-xl text-[#0A66C2]" />
-                Sign up with LinkedIn
-              </button>
-            </div>
-
-            <div className="my-6 flex items-center gap-3">
-              <span className="flex-1 border-t border-outline-variant/30" />
-              <span className="text-label-sm text-on-surface-variant">OR CONTINUE WITH EMAIL</span>
-              <span className="flex-1 border-t border-outline-variant/30" />
-            </div>
-
             {error && (
               <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-body-sm text-red-700">
                 {error}

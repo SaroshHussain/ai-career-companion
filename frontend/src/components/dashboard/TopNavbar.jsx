@@ -1,4 +1,5 @@
-import { HiOutlineMagnifyingGlass, HiOutlineBell, HiOutlineSparkles, HiBars3 } from 'react-icons/hi2'
+import { Link } from 'react-router-dom'
+import { HiOutlineMagnifyingGlass, HiOutlineSparkles, HiBars3 } from 'react-icons/hi2'
 
 function TopNavbar({ onMenuToggle }) {
   return (
@@ -26,22 +27,14 @@ function TopNavbar({ onMenuToggle }) {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="relative rounded-full p-2 text-on-surface-variant transition hover:bg-surface-container-low hover:text-on-surface"
-            aria-label="Notifications"
-          >
-            <HiOutlineBell className="text-xl" />
-            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
-          </button>
-          <button
-            type="button"
+          <Link
+            to="/dashboard/ai"
             className="flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-label-sm font-medium text-primary transition hover:bg-primary/20"
             aria-label="AI Assistant"
           >
             <HiOutlineSparkles className="text-lg" aria-hidden />
             <span className="hidden sm:inline">AI Assistant</span>
-          </button>
+          </Link>
         </div>
       </div>
     </header>

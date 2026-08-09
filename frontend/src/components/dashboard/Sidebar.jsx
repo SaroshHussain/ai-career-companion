@@ -8,7 +8,6 @@ import {
   HiOutlineDocument,
   HiOutlineSparkles,
   HiOutlineBookmark,
-  HiOutlineUser,
   HiOutlineCog6Tooth,
   HiOutlineArrowRightOnRectangle,
   HiXMark,
@@ -28,7 +27,6 @@ const navItems = [
 ]
 
 const bottomItems = [
-  { label: 'User Profile', icon: HiOutlineUser, href: '/dashboard/profile' },
   { label: 'Settings', icon: HiOutlineCog6Tooth, href: '/dashboard/settings' },
 ]
 

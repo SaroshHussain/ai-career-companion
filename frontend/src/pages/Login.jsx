@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { HiEye, HiEyeSlash, HiOutlineArrowPath } from 'react-icons/hi2'
-import { FcGoogle } from 'react-icons/fc'
-import { FaLinkedinIn } from 'react-icons/fa6'
 import { MdArrowForward } from 'react-icons/md'
 
 import Input from '../components/ui/Input'
@@ -133,31 +131,6 @@ function Login() {
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
-
-            <div className="my-6 flex items-center gap-3">
-              <span className="flex-1 border-t border-outline-variant/30" />
-              <span className="text-label-sm text-on-surface-variant">OR CONTINUE WITH</span>
-              <span className="flex-1 border-t border-outline-variant/30" />
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <FcGoogle className="text-xl" />
-                Google
-              </button>
-              <button
-                type="button"
-                disabled={loading}
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-body-sm text-on-surface transition hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <FaLinkedinIn className="text-xl text-[#0A66C2]" />
-                LinkedIn
-              </button>
-            </div>
           </div>
 
           <p className="mt-6 text-center text-body-sm text-on-surface-variant">
