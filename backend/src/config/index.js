@@ -11,7 +11,11 @@ const __dirname = dirname(__filename)
 const config = {
   port: parseInt(process.env.PORT, 10) || 5000,
   nodeEnv: process.env.NODE_ENV || 'development',
-  clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  // Comma-separated list of allowed frontend origins for CORS.
+  clientOrigins: (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/$/, ''))
+    .filter(Boolean),
   isDev: process.env.NODE_ENV !== 'production',
 
   // MongoDB connection string. Falls back to null so the server can still
