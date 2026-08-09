@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   HiOutlineDocumentText,
@@ -11,15 +11,16 @@ import { HiOutlineDownload } from 'react-icons/hi'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import Markdown from '../components/ui/Markdown'
+import ResumePicker from '../components/resume/ResumePicker'
 import { useResume } from '../context/ResumeContext'
-import { generateCoverLetter } from '../services/api'
+import { generateCoverLetter, getResumeDocuments } from '../services/api'
 import { generateCoverLetterPDF, downloadBlob, getCoverLetterFilename } from '../services/pdfExport'
 
 const STATUS = { IDLE: 'idle', GENERATING: 'generating', SUCCESS: 'success', ERROR: 'error' }
 
 function CoverLetter() {
   const navigate = useNavigate()
-  const { resumeData } = useResume()
+  const { resumeData, resumeId, loadResumeById } = useResume()
   const [company, setCompany] = useState('')
   const [position, setPosition] = useState('')
   const [notes, setNotes] = useState('')
@@ -27,6 +28,40 @@ function CoverLetter() {
   const [error, setError] = useState(null)
   const [letter, setLetter] = useState('')
   const [isDownloading, setIsDownloading] = useState(false)
+
+  const [resumes, setResumes] = useState([])
+  const [resumesLoading, setResumesLoading] = useState(true)
+  const [resumesError, setResumesError] = useState(null)
+
+  const loadResumes = useCallback(async () => {
+    setResumesLoading(true)
+    setResumesError(null)
+    try {
+      const data = await getResumeDocuments()
+      setResumes(data?.resumes || [])
+    } catch (err) {
+      console.error('[CoverLetter] failed to load saved resumes', err)
+      setResumesError(err.message || 'Failed to load saved resumes.')
+    } finally {
+      setResumesLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadResumes()
+  }, [loadResumes])
+
+  // Selecting a resume marks it as the active resume (same behaviour as the
+  // Resume Builder) so its data becomes the cover letter context.
+  const handleSelectResume = async (id) => {
+    setResumesError(null)
+    try {
+      await loadResumeById(id)
+    } catch (err) {
+      console.error('[CoverLetter] failed to select resume', err)
+      setResumesError(err.message || 'Failed to load that resume.')
+    }
+  }
 
   const hasResume = Boolean(
     resumeData?.personal?.fullName || resumeData?.personal?.professionalTitle || resumeData?.experience?.length,
@@ -83,6 +118,14 @@ function CoverLetter() {
             Tell us where you are applying and we&apos;ll draft a tailored cover letter from your resume.
           </p>
         </div>
+
+        <ResumePicker
+          resumes={resumes}
+          selectedId={resumeId}
+          onSelect={handleSelectResume}
+          isLoading={resumesLoading}
+          error={resumesError}
+        />
 
         {!hasResume && (
           <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-4">
