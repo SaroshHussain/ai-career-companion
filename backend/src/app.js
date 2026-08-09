@@ -12,6 +12,8 @@ import resumeRoutes from './routes/resume.js'
 import resumesRoutes from './routes/resumes.js'
 import aiRoutes from './routes/ai.js'
 import jobsRoutes from './routes/jobs.js'
+import savedJobsRoutes from './routes/savedJobs.js'
+import aiSessionsRoutes from './routes/aiSessions.js'
 import errorHandler from './middleware/errorHandler.js'
 
 const app = express()
@@ -40,6 +42,8 @@ app.use('/api/resume', resumeRoutes)
 app.use('/api/resumes', resumesRoutes)
 app.use('/api', aiRoutes)
 app.use('/api', jobsRoutes)
+app.use('/api/saved-jobs', savedJobsRoutes)
+app.use('/api/ai-sessions', aiSessionsRoutes)
 
 // ----- Error handling -----
 

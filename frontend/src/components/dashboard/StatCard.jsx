@@ -1,4 +1,4 @@
-function StatCard({ title, value, subtitle, icon: Icon, color }) {
+function StatCard({ title, value, subtitle, icon: Icon, color, onClick }) {
   const colorMap = {
     blue: 'bg-primary/10 text-primary',
     indigo: 'bg-secondary/10 text-secondary',
@@ -8,8 +8,11 @@ function StatCard({ title, value, subtitle, icon: Icon, color }) {
 
   const iconBg = colorMap[color] || colorMap.blue
 
-  return (
-    <article className="rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-4 shadow-card transition-shadow hover:shadow-card-hover">
+  const baseClass =
+    'rounded-lg border border-outline-variant/30 bg-surface-container-lowest p-4 shadow-card transition-shadow hover:shadow-card-hover'
+
+  const content = (
+    <>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-label-sm text-on-surface-variant">{title}</p>
@@ -22,8 +25,22 @@ function StatCard({ title, value, subtitle, icon: Icon, color }) {
           <Icon className="text-xl" aria-hidden />
         </div>
       </div>
-    </article>
+    </>
   )
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${baseClass} cursor-pointer text-left transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background`}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return <article className={baseClass}>{content}</article>
 }
 
 export default StatCard

@@ -3,16 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import {
   HiOutlineDocumentPlus, HiOutlineArrowPath, HiCheckCircle,
   HiOutlineCloudArrowUp, HiOutlineExclamationTriangle, HiOutlineBriefcase,
-  HiOutlineDocumentText, HiOutlineChevronRight,
+  HiOutlineDocumentText, HiOutlineChevronRight, HiOutlineTrash, HiOutlineXMark,
 } from 'react-icons/hi2'
 import { MdDescription } from 'react-icons/md'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import ResumeOptionCard from '../components/resume/ResumeOptionCard'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
 import { useResume } from '../context/ResumeContext'
 import { useJobSearch } from '../context/JobSearchContext'
 import { parseResume } from '../services/resumeParser'
-import { getResumeDocuments } from '../services/api'
+import { deleteResumeDocument, getResumeDocuments } from '../services/api'
 
 // Pulls the user's job-search defaults from a parsed resume: the headline
 // professional title and the city they live in. Falls back to the first
@@ -169,7 +170,7 @@ const STATUS = { IDLE: 'idle', UPLOADING: 'uploading', PARSING: 'parsing', SUCCE
 
 function ResumeBuilder() {
   const navigate = useNavigate()
-  const { loadParsedResume, resetToNew, saveResumeToServer, loadResumeById, resumeId } = useResume()
+  const { loadParsedResume, resetToNew, saveResumeToServer, loadResumeById, resumeId, clearResumeId } = useResume()
   const { updatePreferences } = useJobSearch()
   const [status, setStatus] = useState(STATUS.IDLE)
   const [error, setError] = useState(null)
@@ -180,6 +181,9 @@ function ResumeBuilder() {
   const [listLoading, setListLoading] = useState(true)
   const [listError, setListError] = useState(null)
   const [loadingResumeId, setLoadingResumeId] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleteError, setDeleteError] = useState(null)
 
   // Load saved resumes from the backend (drives both the count and the list).
   const loadResumes = useCallback(async () => {
@@ -222,6 +226,29 @@ function ResumeBuilder() {
       setListError(err.message || 'Failed to load that resume.')
     } finally {
       setLoadingResumeId(null)
+    }
+  }
+
+  const openDeleteConfirm = (resume) => {
+    setDeleteError(null)
+    setDeleteTarget(resume)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeletingId(deleteTarget.id)
+    setDeleteError(null)
+    try {
+      await deleteResumeDocument(deleteTarget.id)
+      if (resumeId === deleteTarget.id) clearResumeId()
+      setResumes((prev) => prev.filter((r) => r.id !== deleteTarget.id))
+      setResumeCount((c) => Math.max(0, c - 1))
+      setDeleteTarget(null)
+    } catch (err) {
+      console.error('[ResumeBuilder] failed to delete resume', err)
+      setDeleteError(err.message || 'Failed to delete that resume.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -328,40 +355,58 @@ function ResumeBuilder() {
                 })
                 return (
                   <li key={resume.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectResume(resume.id)}
-                      disabled={loadingResumeId === resume.id}
-                      className={`flex w-full items-center gap-3 rounded-lg border px-3.5 py-3 text-left transition hover:bg-surface-container-low ${
+                    <div
+                      className={`flex w-full items-center rounded-lg border transition hover:bg-surface-container-low ${
                         isActive
                           ? 'border-primary/40 bg-primary/5'
                           : 'border-outline-variant/30 bg-surface-container-lowest'
-                      } disabled:cursor-wait disabled:opacity-70`}
+                      }`}
                     >
-                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isActive ? 'bg-primary/15 text-primary' : 'bg-primary/10 text-primary'}`}>
-                        {loadingResumeId === resume.id ? (
+                      <button
+                        type="button"
+                        onClick={() => handleSelectResume(resume.id)}
+                        disabled={loadingResumeId === resume.id || deletingId === resume.id}
+                        className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-3.5 pr-1 text-left disabled:cursor-wait disabled:opacity-70"
+                      >
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${isActive ? 'bg-primary/15 text-primary' : 'bg-primary/10 text-primary'}`}>
+                          {loadingResumeId === resume.id ? (
+                            <HiOutlineArrowPath className="animate-spin text-base" aria-hidden />
+                          ) : (
+                            <HiOutlineDocumentText className="text-base" aria-hidden />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-body-sm font-medium text-on-surface">
+                            {fullName || resume.name || 'Untitled Resume'}
+                            {isActive && (
+                              <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
+                                Active
+                              </span>
+                            )}
+                          </p>
+                          <p className="truncate text-label-sm text-on-surface-variant">
+                            {resume.name !== (fullName || resume.name) && fullName
+                              ? `${resume.name} • Updated ${updated}`
+                              : `Updated ${updated}`}
+                          </p>
+                        </div>
+                        <HiOutlineChevronRight className="shrink-0 text-on-surface-variant" aria-hidden />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openDeleteConfirm(resume)}
+                        disabled={deletingId === resume.id}
+                        className="mr-2 shrink-0 rounded-lg p-2 text-on-surface-variant/60 transition hover:bg-error-container/20 hover:text-error active:scale-95 disabled:cursor-wait disabled:opacity-60"
+                        title={`Delete ${fullName || resume.name || 'resume'}`}
+                        aria-label={`Delete ${fullName || resume.name || 'resume'}`}
+                      >
+                        {deletingId === resume.id ? (
                           <HiOutlineArrowPath className="animate-spin text-base" aria-hidden />
                         ) : (
-                          <HiOutlineDocumentText className="text-base" aria-hidden />
+                          <HiOutlineTrash className="text-base" aria-hidden />
                         )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-body-sm font-medium text-on-surface">
-                          {fullName || resume.name || 'Untitled Resume'}
-                          {isActive && (
-                            <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-medium text-primary">
-                              Active
-                            </span>
-                          )}
-                        </p>
-                        <p className="truncate text-label-sm text-on-surface-variant">
-                          {resume.name !== (fullName || resume.name) && fullName
-                            ? `${resume.name} • Updated ${updated}`
-                            : `Updated ${updated}`}
-                        </p>
-                      </div>
-                      <HiOutlineChevronRight className="shrink-0 text-on-surface-variant" aria-hidden />
-                    </button>
+                      </button>
+                    </div>
                   </li>
                 )
               })}
@@ -426,6 +471,38 @@ function ResumeBuilder() {
           )}
         </div>
       </div>
+
+      {deleteError && (
+        <div className="fixed bottom-6 right-6 z-[70] flex items-start gap-3 rounded-xl border border-error/20 bg-error-container px-5 py-3.5 shadow-lg" role="alert">
+          <HiOutlineExclamationTriangle className="mt-0.5 h-5 w-5 text-error shrink-0" aria-hidden />
+          <div className="flex-1 min-w-0">
+            <p className="text-body-sm font-semibold text-on-surface">Delete failed</p>
+            <p className="mt-0.5 text-body-sm text-on-surface-variant">{deleteError}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDeleteError(null)}
+            className="rounded-md p-0.5 text-on-surface-variant/60 hover:text-on-surface transition shrink-0"
+            aria-label="Dismiss"
+          >
+            <HiOutlineXMark className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Resume?"
+        message={
+          deleteTarget
+            ? `This will permanently delete "${deleteTarget.data?.personal?.fullName?.trim() || deleteTarget.name || 'this resume'}". This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        confirmVariant="danger"
+      />
     </DashboardLayout>
   )
 }

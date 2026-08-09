@@ -9,6 +9,7 @@ import ResumeBuilder from './pages/ResumeBuilder'
 import ResumeEditor from './pages/ResumeEditor'
 import JobFinder from './pages/JobFinder'
 import JobDetailPage from './pages/JobDetailPage'
+import SavedJobs from './pages/SavedJobs'
 import CoverLetter from './pages/CoverLetter'
 import AIAssistant from './pages/AIAssistant'
 import { ResumeProvider } from './context/ResumeContext'
@@ -79,6 +80,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <JobDetailPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/saved-jobs"
+              element={
+                <ProtectedRoute>
+                  <SavedJobs />
                 </ProtectedRoute>
               }
             />

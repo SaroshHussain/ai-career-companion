@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   HiOutlineArrowPath,
@@ -7,12 +7,17 @@ import {
   HiOutlineBriefcase,
   HiOutlineMapPin,
   HiOutlineCalendarDays,
+  HiOutlineBookmark,
+  HiCheck,
+  HiOutlineCheckCircle,
 } from 'react-icons/hi2'
 import { HiExternalLink, HiOutlineClock } from 'react-icons/hi'
 
 import DashboardLayout from '../components/dashboard/DashboardLayout'
 import SanitizedHtml from '../components/ui/SanitizedHtml'
-import { getJob } from '../services/api'
+import ConfirmDialog from '../components/ui/ConfirmDialog'
+import Toast from '../components/ui/Toast'
+import { getJob, getSavedJob, saveJob, unsaveJob, setSavedJobApplied } from '../services/api'
 
 function formatUpdated(updated) {
   if (!updated) return ''
@@ -30,6 +35,12 @@ function JobDetailPage() {
   const [job, setJob] = useState(initialJob || null)
   const [isLoading, setIsLoading] = useState(!initialJob)
   const [error, setError] = useState(null)
+
+  const [isSaved, setIsSaved] = useState(false)
+  const [isApplied, setIsApplied] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [showUnsaveDialog, setShowUnsaveDialog] = useState(false)
+  const [toast, setToast] = useState(null)
 
   useEffect(() => {
     if (initialJob) return
@@ -54,6 +65,84 @@ function JobDetailPage() {
       cancelled = true
     }
   }, [jobId, initialJob])
+
+  const showToast = useCallback((message) => {
+    setToast(message)
+  }, [])
+
+  // Once the job is known, fetch its saved/applied status.
+  useEffect(() => {
+    if (!job) return
+
+    let cancelled = false
+    const loadStatus = async () => {
+      try {
+        const data = await getSavedJob(jobId)
+        if (!cancelled) {
+          setIsSaved(Boolean(data.savedJob?.isSaved))
+          setIsApplied(Boolean(data.savedJob?.isApplied))
+        }
+      } catch (err) {
+        // 404 simply means the job was never saved/applied.
+        if (!cancelled) {
+          setIsSaved(false)
+          setIsApplied(false)
+        }
+      }
+    }
+
+    loadStatus()
+    return () => {
+      cancelled = true
+    }
+  }, [job, jobId])
+
+  const handleSave = async () => {
+    if (!job || isUpdating) return
+    setIsUpdating(true)
+    try {
+      await saveJob({ jobId, job })
+      setIsSaved(true)
+      showToast('Job saved to your dashboard')
+    } catch (err) {
+      console.error('[JobDetailPage] save failed', err)
+      showToast(err.message || 'Failed to save this job. Please try again.')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleUnsave = async () => {
+    setShowUnsaveDialog(false)
+    if (!job || isUpdating) return
+    setIsUpdating(true)
+    try {
+      await unsaveJob(jobId)
+      setIsSaved(false)
+      showToast('Job removed from saved jobs')
+    } catch (err) {
+      console.error('[JobDetailPage] unsave failed', err)
+      showToast(err.message || 'Failed to remove this job. Please try again.')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleToggleApplied = async () => {
+    if (!job || isUpdating) return
+    setIsUpdating(true)
+    const next = !isApplied
+    try {
+      await setSavedJobApplied(jobId, { isApplied: next, job })
+      setIsApplied(next)
+      showToast(next ? 'Marked as applied' : 'Applied status removed')
+    } catch (err) {
+      console.error('[JobDetailPage] applied toggle failed', err)
+      showToast(err.message || 'Failed to update applied status. Please try again.')
+    } finally {
+      setIsUpdating(false)
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -164,6 +253,49 @@ function JobDetailPage() {
                   )}
                 </div>
               )}
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                {isSaved ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowUnsaveDialog(true)}
+                    disabled={isUpdating}
+                    className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-label-sm font-medium text-primary transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <HiOutlineBookmark className="text-base" aria-hidden />
+                    Saved
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={isUpdating}
+                    className="inline-flex items-center gap-2 rounded-lg border border-outline-variant bg-surface-container-lowest px-4 py-2.5 text-label-sm font-medium text-on-surface transition hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <HiOutlineBookmark className="text-base" aria-hidden />
+                    Save Job
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleToggleApplied}
+                  disabled={isUpdating}
+                  aria-pressed={isApplied}
+                  className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-label-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                    isApplied
+                      ? 'border-primary bg-primary/10 text-primary hover:bg-primary/15'
+                      : 'border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container-low'
+                  }`}
+                >
+                  {isApplied ? (
+                    <HiCheck className="text-base" aria-hidden />
+                  ) : (
+                    <HiOutlineCheckCircle className="text-base" aria-hidden />
+                  )}
+                  {isApplied ? 'Applied' : 'Mark as Applied'}
+                </button>
+              </div>
             </div>
 
             <div className="p-6 sm:p-8">
@@ -182,6 +314,18 @@ function JobDetailPage() {
           </article>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={showUnsaveDialog}
+        onClose={() => setShowUnsaveDialog(false)}
+        onConfirm={handleUnsave}
+        title="Remove Saved Job"
+        message="Are you sure you want to remove this job from your saved jobs? You can save it again from its detail page at any time."
+        confirmLabel="Remove"
+        confirmVariant="danger"
+      />
+
+      <Toast message={toast} isOpen={Boolean(toast)} onClose={() => setToast(null)} />
     </DashboardLayout>
   )
 }

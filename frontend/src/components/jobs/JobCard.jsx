@@ -14,7 +14,7 @@ function formatUpdated(updated) {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-function JobCard({ job }) {
+function JobCard({ job, onOpen, actions }) {
   const navigate = useNavigate()
   const initials = (job.company || job.title || '?')
     .split(' ')
@@ -24,13 +24,20 @@ function JobCard({ job }) {
     .join('')
     .toUpperCase()
 
-  const handleOpen = () => navigate(`/dashboard/jobs/${job.id}`)
+  const handleOpen = () => {
+    if (onOpen) onOpen(job)
+    else navigate(`/dashboard/jobs/${job.id}`)
+  }
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
       handleOpen()
     }
+  }
+
+  const handleActionsClick = (event) => {
+    event.stopPropagation()
   }
 
   return (
@@ -94,6 +101,12 @@ function JobCard({ job }) {
             {job.source || 'Jooble'}
           </span>
           {formatUpdated(job.updated) && <span>{formatUpdated(job.updated)}</span>}
+        </div>
+      )}
+
+      {actions && (
+        <div className="flex flex-wrap items-center gap-2 border-t border-outline-variant/30 pt-3" onClick={handleActionsClick}>
+          {actions}
         </div>
       )}
     </article>

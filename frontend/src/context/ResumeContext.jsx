@@ -7,6 +7,7 @@ import {
 } from '../services/api'
 
 const RESUME_ID_KEY = 'pathfinder-resume-id'
+export const RESUME_AUTOSAVE_KEY = 'pathfinder-resume-editor'
 
 const ResumeContext = createContext(null)
 
@@ -105,8 +106,7 @@ export function ResumeProvider({ children }) {
   // Accepts explicit overrides so callers can persist freshly parsed data
   // without waiting for context state to flush.
   // Note: the data is saved AS-IS (no normalization) so the exact shape the
-  // backend API returned — including every field such as the top-level
-  // "summary" — is preserved in MongoDB.
+  // backend parser returned is preserved in MongoDB.
   const saveResumeToServer = useCallback(async (dataOverride, fileOverride) => {
     const data = dataOverride || resumeData
     const file = fileOverride || uploadedFile
@@ -134,6 +134,45 @@ export function ResumeProvider({ children }) {
     return result?.resume || null
   }, [resumeData, uploadedFile, resumeId])
 
+  // Always create a NEW resume document (a new version) from the current data,
+  // then point the active resume id at it. Used by the editor's Save button so
+  // each save is preserved as a separate version in the saved-resumes list.
+  const saveResumeAsNewVersion = useCallback(async (dataOverride, fileOverride) => {
+    const data = dataOverride || resumeData
+    const file = fileOverride || uploadedFile
+    const name = data.personal?.fullName?.trim() || file?.name || 'Untitled Resume'
+    const payload = {
+      name,
+      data,
+      fileInfo: file
+        ? { name: file.name, type: file.type, size: file.size }
+        : undefined,
+    }
+
+    const result = await createResumeDocument(payload)
+    const id = result?.resume?.id
+    if (id) {
+      setResumeId(id)
+      persistResumeId(id)
+    }
+    return result?.resume || null
+  }, [resumeData, uploadedFile])
+
+  // Forget the active resume id (e.g. after the active resume is deleted).
+  // Also clears the editor's localStorage autosave so a deleted resume's data
+  // can't reappear when the editor is reopened.
+  const clearResumeId = useCallback(() => {
+    setResumeId(null)
+    persistResumeId(null)
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem(RESUME_AUTOSAVE_KEY)
+      } catch {
+        // ignore storage failures
+      }
+    }
+  }, [])
+
   // Load a saved resume document from the backend by id.
   const loadResumeById = useCallback(async (id) => {
     const result = await getResumeDocumentById(id)
@@ -142,6 +181,7 @@ export function ResumeProvider({ children }) {
       setResumeId(id)
       persistResumeId(id)
       setResumeData(normalizeParsedResume(resume.data))
+      setUploadedFile(resume.fileInfo || null)
       setMode('edit')
     }
     return resume || null
@@ -478,6 +518,8 @@ export function ResumeProvider({ children }) {
     loadParsedResume,
     resetToNew,
     saveResumeToServer,
+    saveResumeAsNewVersion,
+    clearResumeId,
     loadResumeById,
     loadResume,
     updatePersonal,

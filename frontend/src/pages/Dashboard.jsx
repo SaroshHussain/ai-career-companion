@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   HiOutlineDocumentText,
   HiOutlineBriefcase,
-  HiOutlineDocument,
+  HiOutlineBookmark,
   HiOutlineSparkles,
   HiOutlineAcademicCap,
 } from 'react-icons/hi2'
@@ -12,13 +12,16 @@ import DashboardLayout from '../components/dashboard/DashboardLayout'
 import AIInsightsCard from '../components/dashboard/AIInsightsCard'
 import StatCard from '../components/dashboard/StatCard'
 import { useAuth } from '../hooks/useAuth'
-import { getResumeDocuments } from '../services/api'
+import { getResumeDocuments, getSavedJobsStats, getAiSessions } from '../services/api'
 
 function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const name = user?.name || 'Guest'
   const [resumeCount, setResumeCount] = useState(0)
+  const [savedJobsCount, setSavedJobsCount] = useState(0)
+  const [appliedCount, setAppliedCount] = useState(0)
+  const [sessionCount, setSessionCount] = useState(0)
 
   useEffect(() => {
     let mounted = true
@@ -27,6 +30,33 @@ function Dashboard() {
         if (mounted && typeof data?.count === 'number') setResumeCount(data.count)
       })
       .catch((err) => console.error('[Dashboard] failed to load resume count', err))
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    getSavedJobsStats()
+      .then((data) => {
+        if (mounted && data?.data) {
+          setSavedJobsCount(data.data.saved || 0)
+          setAppliedCount(data.data.applied || 0)
+        }
+      })
+      .catch((err) => console.error('[Dashboard] failed to load saved job stats', err))
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+    getAiSessions()
+      .then((data) => {
+        if (mounted && typeof data?.count === 'number') setSessionCount(data.count)
+      })
+      .catch((err) => console.error('[Dashboard] failed to load AI session count', err))
     return () => {
       mounted = false
     }
@@ -54,21 +84,22 @@ function Dashboard() {
           />
           <StatCard
             title="Jobs Applied"
-            value={0}
+            value={appliedCount}
             subtitle="Tracked applications"
             icon={HiOutlineBriefcase}
             color="indigo"
           />
           <StatCard
-            title="Cover Letters"
-            value={0}
-            subtitle="Created so far"
-            icon={HiOutlineDocument}
+            title="Saved Jobs"
+            value={savedJobsCount}
+            subtitle="View your saved jobs"
+            icon={HiOutlineBookmark}
             color="teal"
+            onClick={() => navigate('/dashboard/saved-jobs')}
           />
           <StatCard
             title="AI Sessions"
-            value={0}
+            value={sessionCount}
             subtitle="Assist & interview prep"
             icon={HiOutlineSparkles}
             color="amber"

@@ -216,6 +216,70 @@ export async function getJob(jobId) {
   return request(`/jobs/${encodeURIComponent(jobId)}`)
 }
 
+// ----- Saved jobs -----
+
+export async function saveJob({ jobId, job }) {
+  return request('/saved-jobs', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobId, job }),
+  })
+}
+
+export async function getSavedJobs() {
+  return request('/saved-jobs')
+}
+
+export async function getSavedJob(jobId) {
+  return request(`/saved-jobs/${encodeURIComponent(jobId)}`)
+}
+
+export async function getSavedJobsStats() {
+  return request('/saved-jobs/stats')
+}
+
+export async function unsaveJob(jobId) {
+  return request(`/saved-jobs/${encodeURIComponent(jobId)}`, { method: 'DELETE' })
+}
+
+export async function setSavedJobApplied(jobId, { isApplied, job }) {
+  return request(`/saved-jobs/${encodeURIComponent(jobId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ isApplied, job }),
+  })
+}
+
+// ----- AI chat sessions -----
+
+export async function getAiSessions() {
+  return request('/ai-sessions')
+}
+
+export async function createAiSession({ title, messages } = {}) {
+  return request('/ai-sessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, messages }),
+  })
+}
+
+export async function getAiSession(id) {
+  return request(`/ai-sessions/${encodeURIComponent(id)}`)
+}
+
+export async function updateAiSession(id, { title, messages }) {
+  return request(`/ai-sessions/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, messages }),
+  })
+}
+
+export async function deleteAiSession(id) {
+  return request(`/ai-sessions/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
 // ----- Authentication -----
 
 export async function registerUser({ name, email, password }) {

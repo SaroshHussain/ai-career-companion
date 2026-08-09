@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import {
   ChevronDown, Plus, Sparkles, User, BookOpen, Briefcase,
   GraduationCap, Wrench, FolderGit2, Award, Trash2, ArrowLeft,
-  Download, X, Loader2, Eye, Edit3, AlertTriangle, RotateCcw,
+  Download, Save, X, Loader2, Eye, Edit3, AlertTriangle, RotateCcw,
   HandHeart, Users, Heart, Trophy,
 } from 'lucide-react'
 
@@ -11,7 +11,7 @@ import DashboardLayout from '../components/dashboard/DashboardLayout'
 import ResumePreview from '../components/resume/ResumePreview'
 import ZoomControls from '../components/resume/ZoomControls'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
-import { useResume } from '../context/ResumeContext'
+import { useResume, RESUME_AUTOSAVE_KEY } from '../context/ResumeContext'
 import { generateResumePDF, downloadBlob, getPDFFilename } from '../services/pdfExport'
 import { isResumeEmpty } from '../services/resumeValidation'
 import { generateSummary as apiGenerateSummary } from '../services/api'
@@ -19,7 +19,7 @@ import { placeholderResume } from '../data/defaultResume'
 
 const A4_WIDTH = 595
 const A4_HEIGHT = 842
-const AUTO_SAVE_KEY = 'pathfinder-resume-editor'
+const AUTO_SAVE_KEY = RESUME_AUTOSAVE_KEY
 
 function Section({ title, icon: Icon, defaultOpen, children, onAdd, aiBadge, actions }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -146,6 +146,7 @@ function ResumeEditor() {
     loadResumeById,
     resetToNew,
     resumeId,
+    saveResumeAsNewVersion,
     mode: ctxMode,
   } = useResume()
 
@@ -158,6 +159,7 @@ function ResumeEditor() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isSummaryGenerating, setIsSummaryGenerating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [aiGeneratedFields] = useState(new Set())
   const [mobileView, setMobileView] = useState('editor')
   const containerRef = useRef(null)
@@ -220,6 +222,20 @@ function ResumeEditor() {
       setIsProcessing(false)
     }
   }, [resumeData, isExporting, mode])
+
+  const handleSave = useCallback(async () => {
+    if (isSaving) return
+    setIsSaving(true)
+    try {
+      await saveResumeAsNewVersion()
+      showToast('Resume saved as a new version')
+    } catch (err) {
+      console.error('Save failed:', err?.message || err)
+      showToast('Failed to save resume. Please try again.', 'error')
+    } finally {
+      setIsSaving(false)
+    }
+  }, [isSaving, saveResumeAsNewVersion, showToast])
 
   const handleZoomIn = useCallback(() => setZoom((p) => Math.min(p + 0.1, 2)), [])
   const handleZoomOut = useCallback(() => setZoom((p) => Math.max(p - 0.1, 0.3)), [])
@@ -433,6 +449,19 @@ function ResumeEditor() {
                 <span className="hidden sm:inline">Reset</span>
               </button>
             )}
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-label-sm font-medium text-primary transition hover:bg-primary/20 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
+            </button>
             <button
               type="button"
               onClick={handleExportPDF}

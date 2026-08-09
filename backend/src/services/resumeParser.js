@@ -6,12 +6,16 @@
 // dates/phones/URLs, and never fabricate data. The response shape is
 // validated and defaulted so downstream consumers always get a usable
 // object.
+//
+// The returned shape is the CANONICAL resume shape used by both the
+// frontend editor and the persisted Resume model: the professional
+// summary lives in `personal.professionalSummary` (not a top-level
+// `summary` key), and `skills` includes a `certifications` category.
 
 import { generateText } from './groq.js'
 
 const TOP_KEYS = [
   'personal',
-  'summary',
   'experience',
   'education',
   'skills',
@@ -29,11 +33,10 @@ function buildPrompt(text) {
 
 Return exactly this structure — use empty strings "" for missing text values, false for missing booleans, and [] for missing arrays:
 {
-  "personal": { "fullName": "", "professionalTitle": "", "email": "", "phone": "", "address": "", "city": "", "state": "", "country": "", "location": "", "portfolio": "", "linkedin": "", "github": "" },
-  "summary": "",
+  "personal": { "fullName": "", "professionalTitle": "", "email": "", "phone": "", "address": "", "city": "", "state": "", "country": "", "location": "", "portfolio": "", "linkedin": "", "github": "", "professionalSummary": "" },
   "experience": [{ "jobTitle": "", "company": "", "employmentType": "", "location": "", "startDate": "", "endDate": "", "currentlyWorking": false, "description": "", "achievements": "", "technologiesUsed": [] }],
   "education": [{ "institution": "", "degree": "", "fieldOfStudy": "", "location": "", "startDate": "", "endDate": "", "grade": "", "description": "" }],
-  "skills": { "technical": [], "soft": [], "tools": [], "frameworks": [], "languages": [], "databases": [], "cloud": [] },
+  "skills": { "technical": [], "soft": [], "tools": [], "frameworks": [], "languages": [], "databases": [], "cloud": [], "certifications": [] },
   "projects": [{ "name": "", "role": "", "startDate": "", "endDate": "", "description": "", "technologies": [], "githubLink": "", "liveLink": "" }],
   "certifications": [{ "name": "", "issuer": "", "date": "", "credentialId": "", "url": "" }],
   "awards": [{ "title": "", "issuer": "", "date": "", "description": "" }],
@@ -74,7 +77,7 @@ PERSONAL:
 
 SUMMARY:
 - Section may be titled "Professional Summary", "Profile", "Summary", "About Me", "Career Objective", "Objective", "Summary of Qualifications", "Personal Statement", "Overview", "Highlights", "Intro".
-- Extract the full text exactly as written — do not truncate.
+- Extract the full text exactly as written — do not truncate — and put it in personal.professionalSummary (NOT a top-level "summary" key).
 
 EXPERIENCE:
 - Section may be titled "Experience", "Work Experience", "Employment History", "Work History", "Employment", "Professional Experience", "Relevant Experience", "Career History", "Professional History".
@@ -110,6 +113,7 @@ SKILLS:
   - languages: HUMAN languages with optional proficiency (e.g. "English (Native)", "Spanish (Fluent)").
   - databases: database systems and query languages (e.g. "PostgreSQL", "MySQL", "MongoDB", "SQL").
   - cloud: cloud platforms and services (e.g. "AWS", "Azure", "GCP", "Docker", "Kubernetes").
+  - certifications: professional certifications, licenses, and credentials named as skills (e.g. "AWS Certified", "PMP", "Google Analytics").
 - If unsure which category a skill belongs to, use technical. When in doubt, prefer technical over soft.
 - Extract ALL skills mentioned, split comma-separated lists into individual items, and remove duplicates.
 
@@ -157,7 +161,7 @@ Resume text:
 ${text}`
 }
 
-const SKILL_CATEGORIES = ['technical', 'soft', 'tools', 'frameworks', 'languages', 'databases', 'cloud']
+const SKILL_CATEGORIES = ['technical', 'soft', 'tools', 'frameworks', 'languages', 'databases', 'cloud', 'certifications']
 
 function cleanJsonResponse(raw) {
   let cleaned = raw.trim()
@@ -187,7 +191,6 @@ function fillDefaults(data) {
   for (const key of TOP_KEYS) {
     if (!(key in data) || data[key] === null || data[key] === undefined) {
       if (key === 'personal') data[key] = {}
-      else if (key === 'summary') data[key] = ''
       else if (key === 'skills') data[key] = {}
       else data[key] = []
     }
@@ -200,14 +203,20 @@ function fillDefaults(data) {
   for (const field of [
     'fullName', 'professionalTitle', 'email', 'phone', 'address', 'city',
     'state', 'country', 'location', 'portfolio', 'linkedin', 'github',
+    'professionalSummary',
   ]) {
     if (typeof data.personal[field] !== 'string') data.personal[field] = ''
   }
 
-  // summary must be a string.
-  if (typeof data.summary !== 'string') {
-    data.summary = ''
+  // Backward compatibility: older AI responses put the summary in a top-level
+  // "summary" key. Move it into personal.professionalSummary and drop it so the
+  // stored document always uses the canonical shape.
+  if (typeof data.summary === 'string' && data.summary.trim()) {
+    if (!data.personal.professionalSummary) {
+      data.personal.professionalSummary = data.summary.trim()
+    }
   }
+  delete data.summary
 
   // Arrays that must be arrays.
   for (const key of ['experience', 'education', 'projects', 'certifications', 'awards', 'publications', 'volunteer', 'interests', 'references']) {
