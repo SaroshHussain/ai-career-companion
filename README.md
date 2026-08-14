@@ -133,6 +133,13 @@ npm run build
 npm run preview
 ```
 
+## Capstone status
+
+- Capstone scaffold added: [CAPSTONE.md](CAPSTONE.md)
+- Deployment checklist: [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md)
+- AI integration notes: [AI_INTEGRATION.md](AI_INTEGRATION.md)
+- Docs and audit instructions: [docs/README.md](docs/README.md), [docs/AUDIT_INSTRUCTIONS.md](docs/AUDIT_INSTRUCTIONS.md)
+
 ---
 
 ## Project Status
