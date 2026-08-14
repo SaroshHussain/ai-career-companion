@@ -56,7 +56,7 @@ Two ways to create a resume:
 
 ### Settings
 
-- Tabbed interface (Profile, Account, Notifications, Security, Billing).
+- Tabbed interface (Profile, Billing).
 - Profile editing: avatar upload (PNG/JPG, 2MB limit), name, title, bio.
 - Personal information: email, phone, location with inline validation.
 - Professional links: LinkedIn, portfolio, GitHub with URL validation.
