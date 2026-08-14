@@ -34,7 +34,12 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
 // ----- Routes -----
-
+app.get('/', (req, res)=>{
+  res.json({status: "up"})
+})
+app.get('/health', (req, res)=>{
+  res.json({status: "server is healthy"})
+})
 // All API routes are namespaced under /api.
 app.use('/api', authRoutes)
 app.use('/api', healthRoutes)
