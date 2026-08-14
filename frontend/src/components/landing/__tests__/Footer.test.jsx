@@ -5,8 +5,8 @@ describe('Footer', () => {
   it('renders brand and newsletter form', () => {
     render(<Footer />)
 
-    expect(screen.getByText(/Pathfinder AI/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Newsletter signup/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Pathfinder AI' })).toBeInTheDocument()
+    expect(screen.getByRole('form', { name: 'Newsletter signup' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Email address/i)).toBeInTheDocument()
   })
 })
